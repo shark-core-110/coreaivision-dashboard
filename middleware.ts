@@ -23,7 +23,13 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch {
+    // auth check failed — treat as unauthenticated
+  }
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login')
   const isCallbackPath = request.nextUrl.pathname.startsWith('/auth/callback')
