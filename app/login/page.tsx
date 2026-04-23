@@ -10,9 +10,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) window.location.href = '/dashboard'
     })
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
