@@ -120,6 +120,16 @@ export default function ScriptsPage() {
 
   return (
     <>
+      <div style={{
+        background: 'rgba(26,112,173,.06)', border: '0.5px solid rgba(26,112,173,.2)',
+        borderRadius: 8, padding: '10px 16px', marginBottom: 20,
+        fontSize: 12, color: 'var(--ink3)', lineHeight: 1.6,
+      }}>
+        <strong style={{ color: 'var(--blue)' }}>Script Pipeline</strong>
+        &nbsp;&middot;&nbsp; Add ideas in Ideation
+        &nbsp;&middot;&nbsp; Move to Shortlisted when worth developing
+        &nbsp;&middot;&nbsp; Final scripts are ready to film and will appear in the Content Calendar
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ fontSize: 12, color: 'var(--ink3)', fontFamily: 'var(--mono)', letterSpacing: '.04em' }}>
           {scripts.length} total &nbsp;·&nbsp; {byStatus('idea').length} ideas &nbsp;·&nbsp; {byStatus('shortlisted').length} shortlisted &nbsp;·&nbsp; {byStatus('final').length} final

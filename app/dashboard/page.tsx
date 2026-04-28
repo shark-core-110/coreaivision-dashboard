@@ -3,6 +3,16 @@ import Link from 'next/link'
 export default function Overview() {
   return (
     <>
+      <div style={{
+        background: 'rgba(26,112,173,.06)', border: '0.5px solid rgba(26,112,173,.2)',
+        borderRadius: 8, padding: '10px 16px', marginBottom: 20,
+        fontSize: 12, color: 'var(--ink3)', lineHeight: 1.6,
+      }}>
+        <strong style={{ color: 'var(--blue)' }}>Overview</strong>
+        &nbsp;&middot;&nbsp; Numbers update live from Supabase
+        &nbsp;&middot;&nbsp; Click tasks to mark done
+        &nbsp;&middot;&nbsp; Check bottlenecks daily &mdash; these are the things blocking output
+      </div>
       <div className="hero-cta-bar">
         <a className="hero-btn hero-btn-notion" href="https://www.notion.so/34a7fe3e7f3d81f996b0cde17f7bbd35" target="_blank" rel="noreferrer">
           ◈ Open Notion HQ

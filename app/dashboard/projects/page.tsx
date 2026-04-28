@@ -112,6 +112,16 @@ export default function Projects() {
 
   return (
     <>
+      <div style={{
+        background: 'rgba(26,112,173,.06)', border: '0.5px solid rgba(26,112,173,.2)',
+        borderRadius: 8, padding: '10px 16px', marginBottom: 20,
+        fontSize: 12, color: 'var(--ink3)', lineHeight: 1.6,
+      }}>
+        <strong style={{ color: 'var(--blue)' }}>Projects</strong>
+        &nbsp;&middot;&nbsp; Click any task to toggle between To Do and Done
+        &nbsp;&middot;&nbsp; Tasks are grouped by deliverable type
+        &nbsp;&middot;&nbsp; Due dates turn red when overdue
+      </div>
       <div className="metric" style={{ marginBottom: 16 }}>
         <div className="metric-label">Weekly Output Progress</div>
         <div className="prog-wrap">

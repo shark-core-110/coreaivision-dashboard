@@ -29,6 +29,16 @@ export default function Cadence() {
 
   return (
     <>
+      <div style={{
+        background: 'rgba(26,112,173,.06)', border: '0.5px solid rgba(26,112,173,.2)',
+        borderRadius: 8, padding: '10px 16px', marginBottom: 20,
+        fontSize: 12, color: 'var(--ink3)', lineHeight: 1.6,
+      }}>
+        <strong style={{ color: 'var(--blue)' }}>Weekly Cadence</strong>
+        &nbsp;&middot;&nbsp; Standard schedule for the week
+        &nbsp;&middot;&nbsp; Use this to coordinate shoots, reviews, and posting times
+        &nbsp;&middot;&nbsp; Adjust per week in the Content Calendar
+      </div>
       <div className="focus-block">
         <div className="focus-label">Operating Rhythm — Mon · Wed · Fri</div>
         <div className="focus-text">Three check-ins per week keep the team aligned without over-meeting. Each session is 15 minutes max in Notion.</div>

@@ -20,8 +20,6 @@ const navItems = [
   { section: 'Growth', items: [
     { label: 'Instagram',     href: '/dashboard/instagram',      icon: '◆', key: '5' },
     { label: 'Clients',       href: '/dashboard/clients',        icon: '◎', key: '6' },
-    { label: 'Client Health', href: '/dashboard/client-health',  icon: '◉', key: 'H' },
-    { label: 'Lyra Pipeline', href: '/dashboard/lyra',           icon: '◈', key: 'L' },
     { label: 'Content Cal',   href: '/dashboard/calendar',       icon: '☰', key: '7' },
     { label: 'Marketing',     href: '/dashboard/marketing',      icon: '◐', key: '8' },
   ]},

@@ -86,6 +86,16 @@ export default function UpdatesPage() {
 
   return (
     <>
+      <div style={{
+        background: 'rgba(26,112,173,.06)', border: '0.5px solid rgba(26,112,173,.2)',
+        borderRadius: 8, padding: '10px 16px', marginBottom: 20,
+        fontSize: 12, color: 'var(--ink3)', lineHeight: 1.6,
+      }}>
+        <strong style={{ color: 'var(--blue)' }}>Updates &amp; Activity</strong>
+        &nbsp;&middot;&nbsp; Log announcements, wins, and blockers here
+        &nbsp;&middot;&nbsp; The team checks this for async updates
+        &nbsp;&middot;&nbsp; All task status changes are auto-logged below
+      </div>
       {/* Post form */}
       <div className="metric" style={{ marginBottom: 20 }}>
         <div className="metric-label">Post an Update</div>
