@@ -1,90 +1,151 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
-type Task = { id: number; label: string; date: string; status: 'todo' | 'prog' | 'done' }
+type TaskStatus = 'todo' | 'prog' | 'done'
 
-const initialTasks: Task[] = [
-  { id: 1,  label: 'Arcads AI — Reel 1',                      date: 'Apr 28', status: 'todo' },
-  { id: 2,  label: 'Arcads AI — Reel 2',                      date: 'Apr 28', status: 'todo' },
-  { id: 3,  label: 'TapNow — Reel 1',                         date: 'Apr 28', status: 'todo' },
-  { id: 4,  label: 'TapNow — Reel 2',                         date: 'Apr 28', status: 'todo' },
-  { id: 5,  label: 'TapNow — Reel 3',                         date: 'Apr 28', status: 'todo' },
-  { id: 6,  label: 'Syntx.ai — Reels 1–9 (Week 1 batch)',     date: 'Apr 28', status: 'todo' },
-  { id: 7,  label: 'Series concept & episode structure',       date: 'Apr 28', status: 'prog' },
-  { id: 8,  label: 'Episode 1 script & shot list',            date: 'Apr 28', status: 'todo' },
-  { id: 9,  label: 'First episode production',                date: 'Apr 28', status: 'todo' },
-  { id: 10, label: 'Community structure & curriculum outline', date: 'Apr 30', status: 'prog' },
-  { id: 11, label: 'Landing page & waitlist',                  date: 'Apr 30', status: 'todo' },
-  { id: 12, label: 'Founding member offer',                   date: 'Apr 30', status: 'todo' },
-  { id: 13, label: 'Lyra avatar content series',              date: 'Ongoing', status: 'prog' },
-  { id: 14, label: 'Lyra Instagram account setup',            date: 'May',    status: 'todo' },
+interface Task {
+  id: string
+  title: string
+  project_name: string
+  section: string
+  status: TaskStatus
+  due_date: string | null
+  assigned_to: string | null
+  updated_by: string | null
+}
+
+const BADGE_LABEL: Record<TaskStatus, string> = { todo: 'To Do', prog: 'In Progress', done: 'Done' }
+const BADGE_CLS: Record<TaskStatus, string>   = { todo: 'tb-todo', prog: 'tb-prog', done: 'tb-done' }
+const DOT_CLS: Record<TaskStatus, string>     = { todo: 'tdot-todo', prog: 'tdot-prog', done: 'tdot-done' }
+
+const SECTION_ORDER = [
+  'Client Deliverables',
+  'Micro Drama Series',
+  'AI Skool Community',
+  'Lyra AI Character',
 ]
 
-const badgeLabel = { todo: 'To Do', prog: 'In Progress', done: 'Done' }
-const badgeCls   = { todo: 'tb-todo', prog: 'tb-prog', done: 'tb-done' }
-const dotCls     = { todo: 'tdot-todo', prog: 'tdot-prog', done: 'tdot-done' }
+function groupBySectionOrdered(tasks: Task[]) {
+  const knownSet = new Set(SECTION_ORDER)
+  const known = SECTION_ORDER
+    .map(name => ({ name, tasks: tasks.filter(t => t.section === name) }))
+    .filter(g => g.tasks.length > 0)
+  const extra = [...new Set(tasks.filter(t => !knownSet.has(t.section)).map(t => t.section))]
+    .map(name => ({ name, tasks: tasks.filter(t => t.section === name) }))
+  return [...known, ...extra]
+}
 
 export default function Projects() {
-  const [tasks, setTasks] = useState(initialTasks)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
-  const toggle = (id: number) => {
-    setTasks(prev => prev.map(t => {
-      if (t.id !== id) return t
-      return { ...t, status: (t.status === 'done' ? 'todo' : 'done') as Task['status'] }
-    }))
+  const fetchTasks = useCallback(async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: true })
+    if (error) {
+      setFetchError(error.message)
+    } else {
+      setTasks(data ?? [])
+    }
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { fetchTasks() }, [fetchTasks])
+
+  const toggle = async (id: string) => {
+    const task = tasks.find(t => t.id === id)
+    if (!task) return
+    const nextStatus: TaskStatus = task.status === 'done' ? 'todo' : 'done'
+
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: nextStatus } : t))
+
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('tasks')
+      .update({ status: nextStatus, updated_by: 'User', updated_at: new Date().toISOString() })
+      .eq('id', id)
+
+    if (error) {
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, status: task.status } : t))
+      return
+    }
+
+    await supabase.from('activity_log').insert({
+      entity_type: 'task',
+      entity_id: id,
+      action: 'status_change',
+      description: `"${task.title}" marked ${nextStatus}`,
+      changed_by: 'User',
+      changed_by_type: 'human',
+    })
   }
 
-  const done = tasks.filter(t => t.status === 'done').length
+  const done  = tasks.filter(t => t.status === 'done').length
   const total = tasks.length
-  const pct = Math.round((done / total) * 100)
-
-  const clientTasks = tasks.slice(0, 6)
-  const dramaTasks  = tasks.slice(6, 9)
-  const skoolTasks  = tasks.slice(9, 12)
-  const lyraTasks   = tasks.slice(12)
+  const pct   = total > 0 ? Math.round((done / total) * 100) : 0
+  const sections = groupBySectionOrdered(tasks)
+  const left  = sections.slice(0, Math.ceil(sections.length / 2))
+  const right = sections.slice(Math.ceil(sections.length / 2))
 
   const TaskRow = ({ t }: { t: Task }) => (
-    <div className="task" onClick={() => toggle(t.id)}>
-      <div className={`tdot ${dotCls[t.status]}`} />
-      <div className={`tname ${t.status === 'done' ? 'done' : ''}`}>{t.label}</div>
-      <div className="tdate">{t.date}</div>
-      <span className={`tbadge ${badgeCls[t.status]}`}>{badgeLabel[t.status]}</span>
+    <div className="task" onClick={() => toggle(t.id)} style={{ cursor: 'pointer' }}>
+      <div className={`tdot ${DOT_CLS[t.status]}`} />
+      <div className={`tname ${t.status === 'done' ? 'done' : ''}`}>{t.title}</div>
+      <div className="tdate">{t.due_date ?? ''}</div>
+      <span className={`tbadge ${BADGE_CLS[t.status]}`}>{BADGE_LABEL[t.status]}</span>
     </div>
   )
+
+  if (loading) {
+    return <div className="metric-label" style={{ padding: '40px 0', textAlign: 'center' }}>Loading tasks…</div>
+  }
+
+  if (fetchError) {
+    return <div className="metric-label" style={{ padding: '40px 0', color: 'var(--red)' }}>Error: {fetchError}</div>
+  }
 
   return (
     <>
       <div className="metric" style={{ marginBottom: 16 }}>
-        <div className="metric-label">Weekly Output Progress — Apr 22–28</div>
+        <div className="metric-label">Weekly Output Progress</div>
         <div className="prog-wrap">
-          <div className="prog-row"><span>0</span><span style={{ color: 'var(--gold)' }}>{done} / {total} tasks done</span><span>{total}</span></div>
-          <div className="prog-track"><div className="prog-fill prog-gold" style={{ width: `${pct}%` }} /></div>
+          <div className="prog-row">
+            <span>0</span>
+            <span style={{ color: 'var(--gold)' }}>{done} / {total} tasks done · {pct}%</span>
+            <span>{total}</span>
+          </div>
+          <div className="prog-track">
+            <div className="prog-fill prog-gold" style={{ width: `${pct}%`, transition: 'width .4s ease' }} />
+          </div>
         </div>
       </div>
 
-      <div className="grid2">
-        <div>
-          <div className="sec">Client Deliverables — This Week</div>
-          <div className="card">{clientTasks.map(t => <TaskRow key={t.id} t={t} />)}</div>
-          <div className="sec">Syntx.ai Deal Progress</div>
-          <div className="card">
-            <div className="deal-stats">
-              <div className="deal-stat"><div className="deal-stat-label">Total Deliverables</div><div className="deal-stat-val" style={{ color: 'var(--gold)' }}>12 reels</div><div className="deal-stat-sub">AI tutorials & showcases</div></div>
-              <div className="deal-stat"><div className="deal-stat-label">Reach Guarantee</div><div className="deal-stat-val" style={{ color: 'var(--green)' }}>10K+</div><div className="deal-stat-sub">6 of 12 reels · 7 days</div></div>
+      {total === 0 ? (
+        <div className="metric-label" style={{ padding: '40px 0', textAlign: 'center' }}>
+          No tasks yet — run the SQL schema in Supabase to seed data.
+        </div>
+      ) : (
+        <div className="grid2">
+          <div>{left.map(sec => (
+            <div key={sec.name}>
+              <div className="sec">{sec.name}</div>
+              <div className="card">{sec.tasks.map(t => <TaskRow key={t.id} t={t} />)}</div>
             </div>
-            <div><div className="prog-row"><span>Reels delivered</span><span style={{ color: 'var(--gold)' }}>0 / 12</span></div><div className="prog-track"><div className="prog-fill prog-gold" style={{ width: '0%' }} /></div></div>
-          </div>
+          ))}</div>
+          <div>{right.map(sec => (
+            <div key={sec.name}>
+              <div className="sec">{sec.name}</div>
+              <div className="card">{sec.tasks.map(t => <TaskRow key={t.id} t={t} />)}</div>
+            </div>
+          ))}</div>
         </div>
-        <div>
-          <div className="sec">Micro Drama Series</div>
-          <div className="card">{dramaTasks.map(t => <TaskRow key={t.id} t={t} />)}</div>
-          <div className="sec">AI Skool Community</div>
-          <div className="card">{skoolTasks.map(t => <TaskRow key={t.id} t={t} />)}</div>
-          <div className="sec">Lyra AI Character</div>
-          <div className="card">{lyraTasks.map(t => <TaskRow key={t.id} t={t} />)}</div>
-        </div>
-      </div>
+      )}
     </>
   )
 }

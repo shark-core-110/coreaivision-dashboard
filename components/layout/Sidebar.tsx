@@ -13,6 +13,7 @@ const navItems = [
     { label: 'Team Pages',    href: '/dashboard/team',        icon: '◎', key: 'P' },
     { label: 'Weekly Cadence',href: '/dashboard/cadence',     icon: '◑', key: 'W' },
     { label: 'Projects',      href: '/dashboard/projects',    icon: '◫', key: '3' },
+    { label: 'Updates',       href: '/dashboard/updates',     icon: '◌', key: 'U' },
     { label: 'Bottlenecks',   href: '/dashboard/bottlenecks', icon: '◉', key: '4' },
   ]},
   { section: 'Growth', items: [

@@ -12,6 +12,7 @@ const pageTitles: Record<string, string> = {
   '/dashboard/team':         'Team Pages',
   '/dashboard/cadence':      'Weekly Cadence',
   '/dashboard/projects':     'Projects',
+  '/dashboard/updates':      'Updates & Activity',
   '/dashboard/bottlenecks':  'Bottlenecks',
   '/dashboard/instagram':    'Instagram',
   '/dashboard/clients':      'Clients',
