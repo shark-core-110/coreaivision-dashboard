@@ -18,7 +18,9 @@ const pageTitles: Record<string, string> = {
   '/dashboard/instagram':    'Instagram',
   '/dashboard/clients':      'Clients',
   '/dashboard/calendar':     'Content Calendar',
-  '/dashboard/marketing':    'Marketing',
+  '/dashboard/client-health': 'Client Health',
+  '/dashboard/lyra':          'Lyra Pipeline',
+  '/dashboard/marketing':     'Marketing',
   '/dashboard/goals':        'Goals',
   '/dashboard/brand':        'Brand DNA',
 }
