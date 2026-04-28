@@ -13,6 +13,7 @@ const pageTitles: Record<string, string> = {
   '/dashboard/cadence':      'Weekly Cadence',
   '/dashboard/projects':     'Projects',
   '/dashboard/updates':      'Updates & Activity',
+  '/dashboard/scripts':      'Script Pipeline',
   '/dashboard/bottlenecks':  'Bottlenecks',
   '/dashboard/instagram':    'Instagram',
   '/dashboard/clients':      'Clients',
