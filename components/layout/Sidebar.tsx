@@ -25,7 +25,6 @@ const navItems = [
   ]},
   { section: 'Vision', items: [
     { label: 'Goals',         href: '/dashboard/goals',       icon: '◑', key: '9' },
-    { label: 'Brand DNA',     href: '/dashboard/brand',       icon: '◈', key: '0' },
   ]},
 ]
 

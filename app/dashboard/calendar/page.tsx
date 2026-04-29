@@ -35,21 +35,21 @@ interface FinalScript {
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const DAY_HEADERS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const PROD_FLOW: ProdStatus[] = ['draft', 'filming', 'editing', 'scheduled', 'posted']
-const ASSIGNEES = ['Shariq', 'Yash', 'Dev', 'Santhosh', 'AI Creator', 'Team']
+const ASSIGNEES = ['Shariq', 'Yash', 'Dev', 'Santhosh', 'Inaash', 'Hanzalah', 'Keon', 'Mani', 'AI Creator', 'Team']
 const PLATFORMS: Platform[] = ['Reel', 'YouTube Short', 'TikTok', 'Carousel', 'Long-form', 'Story']
 const CONTENT_TYPES: ContentType[] = ['Hook / Viral', 'Educational', 'Product Demo', 'Brand Story', 'Behind the Scenes', 'Trending Audio']
 const PLATFORM_FILTERS: ('All' | Platform)[] = ['All', 'Reel', 'YouTube Short', 'TikTok']
 
 const PROD_COLOR: Record<ProdStatus, { fg: string; bg: string; label: string }> = {
-  draft:     { fg: '#888',    bg: 'rgba(136,136,136,.07)', label: 'Draft' },
-  filming:   { fg: '#b86800', bg: 'rgba(184,104,0,.08)',   label: 'Filming' },
-  editing:   { fg: '#1a70ad', bg: 'rgba(26,112,173,.08)',  label: 'Editing' },
-  scheduled: { fg: '#7d3c98', bg: 'rgba(125,60,152,.08)',  label: 'Scheduled' },
-  posted:    { fg: '#1e8a4a', bg: 'rgba(30,138,74,.08)',   label: 'Posted' },
+  draft:     { fg: '#8E8B86', bg: 'rgba(142,139,134,.1)',  label: 'Draft' },
+  filming:   { fg: '#FF9F0A', bg: 'rgba(255,159,10,.1)',   label: 'Filming' },
+  editing:   { fg: '#0A84FF', bg: 'rgba(10,132,255,.1)',   label: 'Editing' },
+  scheduled: { fg: '#BF5AF2', bg: 'rgba(191,90,242,.1)',   label: 'Scheduled' },
+  posted:    { fg: '#30D158', bg: 'rgba(48,209,88,.1)',    label: 'Posted' },
 }
 
-const PLATFORM_BG: Record<Platform, string> = { 'Reel': 'rgba(191,139,46,.09)', 'YouTube Short': 'rgba(192,57,43,.08)', 'TikTok': 'rgba(30,30,30,.06)', 'Carousel': 'rgba(30,111,168,.07)', 'Long-form': 'rgba(30,138,74,.07)', 'Story': 'rgba(142,68,173,.07)' }
-const PLATFORM_FG: Record<Platform, string> = { 'Reel': 'var(--gold)', 'YouTube Short': 'var(--red)', 'TikTok': 'var(--ink)', 'Carousel': 'var(--blue)', 'Long-form': 'var(--green)', 'Story': '#7d3c98' }
+const PLATFORM_BG: Record<Platform, string> = { 'Reel': 'rgba(232,168,32,.1)', 'YouTube Short': 'rgba(255,69,58,.1)', 'TikTok': 'rgba(255,255,255,.06)', 'Carousel': 'rgba(10,132,255,.1)', 'Long-form': 'rgba(48,209,88,.08)', 'Story': 'rgba(191,90,242,.1)' }
+const PLATFORM_FG: Record<Platform, string> = { 'Reel': '#E8A820', 'YouTube Short': '#FF453A', 'TikTok': '#F2F0ED', 'Carousel': '#0A84FF', 'Long-form': '#30D158', 'Story': '#BF5AF2' }
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n)

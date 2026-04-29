@@ -20,7 +20,6 @@ const pageTitles: Record<string, string> = {
   '/dashboard/calendar':     'Content Calendar',
   '/dashboard/marketing':     'Marketing',
   '/dashboard/goals':        'Goals',
-  '/dashboard/brand':        'Brand DNA',
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
