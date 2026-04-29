@@ -35,7 +35,7 @@ interface FinalScript {
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const DAY_HEADERS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const PROD_FLOW: ProdStatus[] = ['draft', 'filming', 'editing', 'scheduled', 'posted']
-const ASSIGNEES = ['Shariq', 'Yash', 'Dev', 'Santhosh', 'Inaash', 'Hanzalah', 'Keon', 'Mani', 'AI Creator', 'Team']
+const ASSIGNEES = ['Shark', 'Yash', 'Pushkar', 'Krishanu', 'Akib', 'Padmanav', 'Niraj', 'Sanjukta', 'Joyeeta', 'Smit', 'Team']
 const PLATFORMS: Platform[] = ['Reel', 'YouTube Short', 'TikTok', 'Carousel', 'Long-form', 'Story']
 const CONTENT_TYPES: ContentType[] = ['Hook / Viral', 'Educational', 'Product Demo', 'Brand Story', 'Behind the Scenes', 'Trending Audio']
 const PLATFORM_FILTERS: ('All' | Platform)[] = ['All', 'Reel', 'YouTube Short', 'TikTok']
