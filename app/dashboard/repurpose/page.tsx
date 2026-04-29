@@ -2,6 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useNotifications } from '@/contexts/NotificationContext'
+import { playSound } from '@/lib/sound'
+import { postToSlack } from '@/lib/slack'
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -56,6 +59,8 @@ function useTemplate(
 // ─── component ───────────────────────────────────────────────────────────────
 
 export default function RepurposePage() {
+  const { notify } = useNotifications()
+
   // input state
   const [reelUrl,       setReelUrl]       = useState('')
   const [description,   setDescription]   = useState('')
@@ -103,16 +108,22 @@ export default function RepurposePage() {
         const fallback = useTemplate(description, platform, contentType, hookType)
         setOutput(fallback)
         setEditOutput({ ...fallback })
+        playSound('pop')
+        notify('Template applied', 'info')
       } else {
         setApiAvailable(true)
         setOutput(data as Output)
         setEditOutput({ ...(data as Output) })
+        playSound('pop')
+        notify('Script generated', 'success')
       }
     } catch {
       setApiAvailable(false)
       const fallback = useTemplate(description, platform, contentType, hookType)
       setOutput(fallback)
       setEditOutput({ ...fallback })
+      playSound('pop')
+      notify('Template applied', 'info')
     } finally {
       setLoading(false)
     }
@@ -123,6 +134,8 @@ export default function RepurposePage() {
     setOutput(fallback)
     setEditOutput({ ...fallback })
     setApiAvailable(false)
+    playSound('pop')
+    notify('Template applied', 'info')
   }
 
   // ── save to scripts ────────────────────────────────────────────────────────
@@ -141,7 +154,18 @@ export default function RepurposePage() {
       client:       client || null,
       submitted_by: 'Shark',
     })
-    setSaveMsg(error ? `Error: ${error.message}` : status === 'idea' ? '✓ Saved as Idea' : '✓ Sent to Shortlisted')
+    if (error) {
+      setSaveMsg(`Error: ${error.message}`)
+    } else if (status === 'idea') {
+      setSaveMsg('✓ Saved as Idea')
+      playSound('success')
+      notify('Saved as Idea in Scripts', 'success')
+    } else {
+      setSaveMsg('✓ Sent to Shortlisted')
+      playSound('send')
+      notify('Sent to Shortlisted', 'success')
+      postToSlack(`🎬 New script sent to Shortlisted: ${editOutput.title}`)
+    }
   }
 
   // ── chat ───────────────────────────────────────────────────────────────────

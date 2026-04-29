@@ -622,3 +622,129 @@ button { cursor: pointer; font-family: var(--mono); }
   border-color: var(--b2);
 }
 .btn-secondary:hover:not(:disabled) { background: var(--s3); }
+
+/* ── TOAST NOTIFICATIONS ─────────────────────────────────────────────────── */
+@keyframes toast-slide-in {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 280px;
+  max-width: 360px;
+  background: var(--s1);
+  border: 0.5px solid var(--b2);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  animation: toast-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  pointer-events: all;
+}
+
+.toast-success { border-left: 3px solid var(--green); }
+.toast-error   { border-left: 3px solid var(--red); }
+.toast-info    { border-left: 3px solid var(--blue); }
+.toast-warning { border-left: 3px solid var(--amber); }
+
+.toast-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.toast-success .toast-icon { color: var(--green); }
+.toast-error   .toast-icon { color: var(--red); }
+.toast-info    .toast-icon { color: var(--blue); }
+.toast-warning .toast-icon { color: var(--amber); }
+
+.toast-msg {
+  flex: 1;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.toast-close {
+  cursor: pointer;
+  color: var(--ink3);
+  font-size: 16px;
+  padding: 0 4px;
+  background: none;
+  border: none;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.toast-close:hover { color: var(--ink); }
+
+/* ── NOTIFICATION BELL ───────────────────────────────────────────────────── */
+.notif-bell {
+  position: relative;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 5px;
+}
+.notif-bell:hover { background: var(--s2); }
+
+.notif-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--red);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 99px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  font-family: var(--mono);
+  pointer-events: none;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  background: var(--s1);
+  border: 0.5px solid var(--b2);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.notif-item {
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--b1);
+  font-size: 12px;
+  transition: background 0.12s;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--s2); }
+
+.notif-time {
+  font-size: 10px;
+  color: var(--ink3);
+  margin-top: 2px;
+  font-family: var(--mono);
+}

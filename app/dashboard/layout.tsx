@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import Topbar from '@/components/layout/Topbar'
 import Sidebar from '@/components/layout/Sidebar'
 import StatusBar from '@/components/layout/StatusBar'
+import { NotificationProvider } from '@/contexts/NotificationContext'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':              'Overview',
@@ -29,11 +30,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const title = pageTitles[pathname] ?? 'Command Center'
 
   return (
-    <>
+    <NotificationProvider>
       <Topbar pageTitle={title} />
       <StatusBar />
       <Sidebar />
       <main className="main">{children}</main>
-    </>
+    </NotificationProvider>
   )
 }

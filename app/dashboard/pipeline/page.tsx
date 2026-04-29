@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useNotifications } from '@/contexts/NotificationContext'
+import { playSound } from '@/lib/sound'
+import { postToSlack } from '@/lib/slack'
 
 type ProdStatus = 'draft' | 'filming' | 'editing' | 'scheduled' | 'posted'
 type Platform = 'Reel' | 'YouTube Short' | 'TikTok' | 'Carousel' | 'Long-form' | 'Story'
@@ -68,6 +71,8 @@ function todayStr(): string {
 }
 
 export default function PipelinePage() {
+  const { notify } = useNotifications()
+
   const [items, setItems]             = useState<PipelineItem[]>([])
   const [loading, setLoading]         = useState(true)
   const [dragging, setDragging]       = useState<PipelineItem | null>(null)
@@ -103,8 +108,14 @@ export default function PipelinePage() {
     setDragOver(null)
     if (!dragging || dragging.prod_status === stage) { setDragging(null); return }
     const sb = createClient()
-    setItems(prev => prev.map(i => i.id === dragging.id ? { ...i, prod_status: stage } : i))
-    await sb.from('content_calendar').update({ prod_status: stage }).eq('id', dragging.id)
+    const item = dragging
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, prod_status: stage } : i))
+    await sb.from('content_calendar').update({ prod_status: stage }).eq('id', item.id)
+    if (stage === 'posted') {
+      playSound('send')
+      notify(`${item.title} marked as Posted`, 'success')
+      postToSlack(`✅ Posted: ${item.title} [${item.platform}]`)
+    }
     setDragging(null)
   }
 
@@ -116,6 +127,11 @@ export default function PipelinePage() {
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, prod_status: next } : i))
     if (detail?.id === item.id) setDetail(prev => prev ? { ...prev, prod_status: next } : null)
     await sb.from('content_calendar').update({ prod_status: next }).eq('id', item.id)
+    if (next === 'posted') {
+      playSound('send')
+      notify(`${item.title} marked as Posted`, 'success')
+      postToSlack(`✅ Posted: ${item.title} [${item.platform}]`)
+    }
   }
 
   async function setStage(item: PipelineItem, stage: ProdStatus) {
@@ -123,6 +139,11 @@ export default function PipelinePage() {
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, prod_status: stage } : i))
     setDetail(prev => prev ? { ...prev, prod_status: stage } : null)
     await sb.from('content_calendar').update({ prod_status: stage }).eq('id', item.id)
+    if (stage === 'posted') {
+      playSound('send')
+      notify(`${item.title} marked as Posted`, 'success')
+      postToSlack(`✅ Posted: ${item.title} [${item.platform}]`)
+    }
   }
 
   function openAdd(stage: ProdStatus) {
@@ -162,6 +183,8 @@ export default function PipelinePage() {
     setItems(prev => prev.map(i => i.id === detail.id ? { ...i, notes: editingNote } : i))
     setDetail(prev => prev ? { ...prev, notes: editingNote } : null)
     await sb.from('content_calendar').update({ notes: editingNote }).eq('id', detail.id)
+    playSound('pop')
+    notify('Notes saved', 'info')
   }
 
   async function deleteItem(id: string) {
