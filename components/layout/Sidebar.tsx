@@ -15,6 +15,7 @@ const navItems = [
     { label: 'Projects',      href: '/dashboard/projects',    icon: '◫', key: '3' },
     { label: 'Updates',       href: '/dashboard/updates',     icon: '◌', key: 'U' },
     { label: 'Scripts',       href: '/dashboard/scripts',     icon: '◧', key: 'S' },
+    { label: 'Pipeline',      href: '/dashboard/pipeline',    icon: '▷', key: 'L' },
     { label: 'Bottlenecks',   href: '/dashboard/bottlenecks', icon: '◉', key: '4' },
   ]},
   { section: 'Growth', items: [
