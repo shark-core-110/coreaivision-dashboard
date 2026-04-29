@@ -249,6 +249,7 @@ export default function PipelinePage() {
                   <button
                     onClick={() => openAdd(stage.key)}
                     title={`Add to ${stage.label}`}
+                    data-sound="open"
                     style={{ width: 22, height: 22, background: stage.bg, border: `0.5px solid ${stage.border}`, color: stage.color, fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                   >+</button>
                 </div>
@@ -367,7 +368,7 @@ export default function PipelinePage() {
               <button onClick={saveAdd} disabled={!form.title.trim() || saving} style={{ flex: 1, padding: '11px 0', background: STAGES.find(s => s.key === addStage)?.color, color: '#FAF8F4', border: 'none', fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', cursor: saving || !form.title.trim() ? 'not-allowed' : 'pointer', opacity: saving || !form.title.trim() ? .5 : 1 }}>
                 {saving ? 'Saving…' : 'Add'}
               </button>
-              <button onClick={() => setShowAdd(false)} style={{ padding: '11px 20px', background: 'var(--s2)', border: '0.5px solid var(--b2)', fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 500, color: 'var(--ink3)', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowAdd(false)} data-sound="close" style={{ padding: '11px 20px', background: 'var(--s2)', border: '0.5px solid var(--b2)', fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 500, color: 'var(--ink3)', cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         </div>

@@ -288,6 +288,7 @@ export default function RepurposePage() {
                 className="btn btn-primary"
                 onClick={handleGenerate}
                 disabled={loading || !description.trim()}
+                data-sound="none"
                 style={{ flex: 1 }}
               >
                 {loading ? 'Generating…' : '✦ Generate with AI'}
@@ -296,6 +297,7 @@ export default function RepurposePage() {
                 className="btn btn-secondary"
                 onClick={handleTemplate}
                 disabled={!description.trim()}
+                data-sound="none"
               >
                 Use Template
               </button>
@@ -345,10 +347,10 @@ export default function RepurposePage() {
               </div>
 
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <button className="btn btn-secondary" onClick={() => saveScript('idea')} style={{ flex: 1 }}>
+                <button className="btn btn-secondary" onClick={() => saveScript('idea')} data-sound="none" style={{ flex: 1 }}>
                   Save as Idea
                 </button>
-                <button className="btn btn-primary" onClick={() => saveScript('shortlisted')} style={{ flex: 1 }}>
+                <button className="btn btn-primary" onClick={() => saveScript('shortlisted')} data-sound="none" style={{ flex: 1 }}>
                   → Send to Shortlisted
                 </button>
               </div>
@@ -480,6 +482,7 @@ export default function RepurposePage() {
               className="btn btn-primary"
               onClick={() => sendChat(chatInput)}
               disabled={chatLoading || !chatInput.trim()}
+              data-sound="none"
               style={{ padding: '8px 14px', fontSize: '12px', flexShrink: 0 }}
             >
               ↑

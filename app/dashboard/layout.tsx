@@ -5,6 +5,7 @@ import Topbar from '@/components/layout/Topbar'
 import Sidebar from '@/components/layout/Sidebar'
 import StatusBar from '@/components/layout/StatusBar'
 import { NotificationProvider } from '@/contexts/NotificationContext'
+import SoundManager from '@/components/SoundManager'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':              'Overview',
@@ -31,6 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <NotificationProvider>
+      <SoundManager />
       <Topbar pageTitle={title} />
       <StatusBar />
       <Sidebar />

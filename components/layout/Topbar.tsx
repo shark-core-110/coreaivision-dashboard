@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import NotificationBell from '@/components/ui/NotificationBell'
+import { SoundToggle } from '@/components/SoundManager'
 
 export default function Topbar({ pageTitle }: { pageTitle: string }) {
   const [time, setTime] = useState('')
@@ -38,6 +39,7 @@ export default function Topbar({ pageTitle }: { pageTitle: string }) {
         <a className="top-btn top-btn-drive" href="https://drive.google.com/drive/folders/1kVzNHwpDZOXpGzlzbOaaK-iTWMcDaaQ9" target="_blank" rel="noreferrer">
           ◫ Drive
         </a>
+        <SoundToggle />
         <NotificationBell />
         <div>
           <div className="live-time">{time}</div>
