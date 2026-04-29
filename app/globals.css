@@ -27,6 +27,12 @@
   --nav-w:      220px;
   --top-h:      52px;
   --bar-h:      36px;
+  /* aliases for shared page components */
+  --surface:    #FFFFFF;
+  --surface2:   #F5F2EC;
+  --border:     #E8E2D5;
+  --accent:     #BF8B2E;
+  --ink1:       #1C1914;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -556,3 +562,63 @@ button { cursor: pointer; font-family: var(--mono); }
 .login-msg { font-family: var(--mono); font-size: 10px; font-weight: 400; margin-top: 12px; text-align: center; }
 .login-msg-ok  { color: var(--green); }
 .login-msg-err { color: var(--red); }
+
+/* ── form utilities ─────────────────────────────────────────────────────── */
+.form-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 5px;
+}
+.form-input {
+  width: 100%;
+  background: var(--s1);
+  border: 0.5px solid var(--b2);
+  color: var(--ink);
+  font-family: var(--hnd);
+  font-weight: 400;
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  border-radius: 5px;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  letter-spacing: -0.01em;
+}
+.form-input:focus { border-color: var(--gold-line); box-shadow: 0 0 0 2px var(--gold-glow); }
+.form-input::placeholder { color: var(--ink4); }
+
+/* ── button utilities ────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  border-radius: 5px;
+  border: 0.5px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary {
+  background: var(--gold);
+  color: #FAF8F4;
+  border-color: var(--gold2);
+}
+.btn-primary:hover:not(:disabled) { background: var(--gold2); }
+.btn-secondary {
+  background: var(--s2);
+  color: var(--ink2);
+  border-color: var(--b2);
+}
+.btn-secondary:hover:not(:disabled) { background: var(--s3); }
