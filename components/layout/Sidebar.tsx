@@ -19,6 +19,10 @@ const navItems = [
     { label: 'Pipeline',      href: '/dashboard/pipeline',    icon: '▷', key: 'L' },
     { label: 'Bottlenecks',   href: '/dashboard/bottlenecks', icon: '◉', key: '4' },
   ]},
+  { section: 'AI Studio', items: [
+    { label: 'Lyra Brain',    href: '/dashboard/lyra-brain',  icon: '◈', key: 'B' },
+    { label: 'Lyra Deals',    href: '/dashboard/lyra',        icon: '◉', key: 'D' },
+  ]},
   { section: 'Growth', items: [
     { label: 'Instagram',     href: '/dashboard/instagram',      icon: '◆', key: '5' },
     { label: 'Clients',       href: '/dashboard/clients',        icon: '◎', key: '6' },

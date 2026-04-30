@@ -17,6 +17,7 @@ const pageTitles: Record<string, string> = {
   '/dashboard/updates':      'Updates & Activity',
   '/dashboard/scripts':      'Script Pipeline',
   '/dashboard/repurpose':    'Reel Repurposer',
+  '/dashboard/lyra-brain':   'Lyra Brain',
   '/dashboard/pipeline':     'Production Pipeline',
   '/dashboard/bottlenecks':  'Bottlenecks',
   '/dashboard/instagram':    'Instagram',
