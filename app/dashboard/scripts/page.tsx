@@ -52,6 +52,95 @@ const CONTENT_TYPES: ContentType[] = ['Hook / Viral', 'Educational', 'Product De
 const PLATFORM_BG: Record<Platform, string>   = { 'Reel': 'rgba(191,139,46,.09)', 'YouTube Short': 'rgba(192,57,43,.08)', 'TikTok': 'rgba(30,30,30,.06)', 'Carousel': 'rgba(30,111,168,.07)', 'Long-form': 'rgba(30,138,74,.07)', 'Story': 'rgba(142,68,173,.07)' }
 const PLATFORM_FG: Record<Platform, string>   = { 'Reel': 'var(--gold)', 'YouTube Short': 'var(--red)', 'TikTok': 'var(--ink)', 'Carousel': 'var(--blue)', 'Long-form': 'var(--green)', 'Story': '#7d3c98' }
 
+// ─── team guide ──────────────────────────────────────────────────────────────
+
+function TeamGuide() {
+  const [open, setOpen] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('scripts_guide_collapsed') !== '1'
+  })
+
+  function toggle() {
+    const next = !open
+    setOpen(next)
+    localStorage.setItem('scripts_guide_collapsed', next ? '0' : '1')
+  }
+
+  return (
+    <div style={{
+      background: 'var(--s2)', border: '0.5px solid var(--b1)',
+      borderRadius: 8, marginBottom: 20, overflow: 'hidden',
+    }}>
+      <button onClick={toggle} style={{
+        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer',
+        fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 600,
+        letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink2)',
+      }}>
+        <span>◧ Team Guide — How Scripts Work</span>
+        <span style={{ color: 'var(--ink4)', fontSize: 12 }}>{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          {/* Flow overview */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Repurpose', color: 'var(--gold)' },
+              { label: '→', color: 'var(--ink4)' },
+              { label: 'Scripts', color: 'var(--blue)' },
+              { label: '→', color: 'var(--ink4)' },
+              { label: 'Pipeline', color: 'var(--amber)' },
+              { label: '→', color: 'var(--ink4)' },
+              { label: 'Content Calendar', color: 'var(--green)' },
+            ].map((s, i) => (
+              <span key={i} style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600, color: s.color }}>{s.label}</span>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+            {/* Column 1 */}
+            <div style={{ background: 'var(--s1)', border: '0.5px solid var(--b1)', borderRadius: 6, padding: '12px 14px' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 8 }}>Columns</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, fontSize: 12, color: 'var(--ink2)', lineHeight: 1.5 }}>
+                <div><strong style={{ color: 'var(--ink)' }}>Ideation</strong> — Dump raw ideas here. No polish needed. Title + rough concept is enough.</div>
+                <div><strong style={{ color: 'var(--amber)' }}>Shortlisted</strong> — Worth developing. Needs a proper hook, voiceover, and platform assigned before it goes further.</div>
+                <div><strong style={{ color: 'var(--green)' }}>Approved</strong> — Shark has signed off. Full script required. Once approved, it gets sent to Pipeline.</div>
+              </div>
+            </div>
+
+            {/* Column 2 */}
+            <div style={{ background: 'var(--s1)', border: '0.5px solid var(--b1)', borderRadius: 6, padding: '12px 14px' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 8 }}>How to Add Scripts</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, fontSize: 12, color: 'var(--ink2)', lineHeight: 1.5 }}>
+                <div><strong style={{ color: 'var(--ink)' }}>+ New Script Idea</strong> — Manual single add. Use for one-off ideas.</div>
+                <div><strong style={{ color: 'var(--ink)' }}>⬆ Bulk Import</strong> — Paste from Google Sheets or a doc with multiple scripts. Claude parses the structure automatically. Works with HOOK:/VOICEOVER: labels, numbered scripts, or plain text.</div>
+                <div><strong style={{ color: 'var(--ink)' }}>Repurpose page</strong> — Generate a script from an Instagram reel and send directly to Shortlisted.</div>
+              </div>
+            </div>
+
+            {/* Column 3 */}
+            <div style={{ background: 'var(--s1)', border: '0.5px solid var(--b1)', borderRadius: 6, padding: '12px 14px' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 8 }}>Approvals & Pipeline</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, fontSize: 12, color: 'var(--ink2)', lineHeight: 1.5 }}>
+                <div><strong style={{ color: 'var(--ink)' }}>Moving cards</strong> — Use the arrow buttons on each card or open the detail panel and use the stage buttons.</div>
+                <div><strong style={{ color: 'var(--ink)' }}>Shark approves</strong> — Only Shark moves scripts to Approved. Once approved, click <strong>→ Send to Pipeline</strong> in the detail panel.</div>
+                <div><strong style={{ color: 'var(--ink)' }}>Attachments</strong> — Add Google Drive, Notion, or Frame.io links inside any script detail panel. Files stay attached to the script.</div>
+                <div><strong style={{ color: 'var(--green)' }}>◉ In Pipeline</strong> badge means the script has already been sent — don&apos;t send it twice.</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ fontSize: 11, color: 'var(--ink4)', fontFamily: 'var(--mono)', borderTop: '0.5px solid var(--b1)', paddingTop: 10 }}>
+            Questions? Ping Shark on Slack or check the Pipeline page for production status.
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function timeAgo(ts: string): string {
   const m = Math.floor((Date.now() - new Date(ts).getTime()) / 60000)
   if (m < 60)   return `${m}m ago`
@@ -251,16 +340,7 @@ export default function ScriptsPage() {
 
   return (
     <>
-      <div style={{
-        background: 'rgba(26,112,173,.06)', border: '0.5px solid rgba(26,112,173,.2)',
-        borderRadius: 8, padding: '10px 16px', marginBottom: 20,
-        fontSize: 12, color: 'var(--ink3)', lineHeight: 1.6,
-      }}>
-        <strong style={{ color: 'var(--blue)' }}>Script Pipeline</strong>
-        &nbsp;&middot;&nbsp; Add ideas in Ideation
-        &nbsp;&middot;&nbsp; Move to Shortlisted when worth developing
-        &nbsp;&middot;&nbsp; Final scripts are ready to film and will appear in the Content Calendar
-      </div>
+      <TeamGuide />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ fontSize: 12, color: 'var(--ink3)', fontFamily: 'var(--mono)', letterSpacing: '.04em' }}>
           {scripts.length} total &nbsp;·&nbsp; {byStatus('idea').length} ideas &nbsp;·&nbsp; {byStatus('shortlisted').length} shortlisted &nbsp;·&nbsp; {byStatus('final').length} final
