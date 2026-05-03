@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import LiveMembers from '@/components/ui/LiveMembers'
 
 export default function Overview() {
   return (
@@ -83,6 +84,8 @@ export default function Overview() {
           <div className="kpi-bar"><div className="kpi-bar-fill prog-gold" style={{ width: '45%' }} /></div>
         </div>
       </div>
+
+      <LiveMembers />
 
       <div className="sec">Quick Actions</div>
       <div className="actions">

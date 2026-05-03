@@ -182,6 +182,23 @@ export default function MyDashboard() {
     })
   }, [fetchData])
 
+  // Presence — broadcast that this user is active on their personal dashboard
+  useEffect(() => {
+    if (!name) return
+    const supabase = createClient()
+    const presence = supabase.channel('team-presence')
+    presence.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await presence.track({
+          name,
+          page: 'personal-dashboard',
+          online_at: new Date().toISOString(),
+        })
+      }
+    })
+    return () => { supabase.removeChannel(presence) }
+  }, [name])
+
   // Real-time sync — re-fetch on any change to tasks or content_calendar
   useEffect(() => {
     if (!name) return
