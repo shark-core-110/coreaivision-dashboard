@@ -17,6 +17,7 @@ const navItems = [
     { label: 'Scripts',       href: '/dashboard/scripts',     icon: '◧', key: 'S' },
     { label: 'Repurpose',     href: '/dashboard/repurpose',   icon: '↻', key: 'R' },
     { label: 'Pipeline',      href: '/dashboard/pipeline',    icon: '▷', key: 'L' },
+    { label: 'Content Cal',   href: '/dashboard/calendar',    icon: '☰', key: '7' },
     { label: 'Bottlenecks',   href: '/dashboard/bottlenecks', icon: '◉', key: '4' },
   ]},
   { section: 'AI Studio', items: [
@@ -26,7 +27,6 @@ const navItems = [
   { section: 'Growth', items: [
     { label: 'Instagram',     href: '/dashboard/instagram',      icon: '◆', key: '5' },
     { label: 'Clients',       href: '/dashboard/clients',        icon: '◎', key: '6' },
-    { label: 'Content Cal',   href: '/dashboard/calendar',       icon: '☰', key: '7' },
     { label: 'Marketing',     href: '/dashboard/marketing',      icon: '◐', key: '8' },
   ]},
   { section: 'Vision', items: [

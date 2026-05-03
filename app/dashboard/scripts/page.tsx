@@ -2,10 +2,17 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useNotifications } from '@/contexts/NotificationContext'
+import { playSound } from '@/lib/sound'
 
 type ScriptStatus = 'idea' | 'shortlisted' | 'final'
 type Platform     = 'Reel' | 'YouTube Short' | 'TikTok' | 'Carousel' | 'Long-form' | 'Story'
 type ContentType  = 'Hook / Viral' | 'Educational' | 'Product Demo' | 'Brand Story' | 'Behind the Scenes' | 'Trending Audio'
+
+interface DocAttachment {
+  label: string
+  url: string
+}
 
 interface Script {
   id: string
@@ -22,9 +29,9 @@ interface Script {
 }
 
 const COLUMNS: { key: ScriptStatus; label: string; sub: string; accent: string; pillBg: string; pillBorder: string }[] = [
-  { key: 'idea',        label: 'Ideation',      sub: 'Raw ideas & concepts',       accent: 'var(--ink3)',  pillBg: 'var(--s3)',                   pillBorder: 'var(--b2)' },
-  { key: 'shortlisted', label: 'Shortlisted',   sub: 'Approved for development',   accent: 'var(--amber)', pillBg: 'rgba(184,104,0,.07)',          pillBorder: 'rgba(184,104,0,.25)' },
-  { key: 'final',       label: 'Final Scripts', sub: 'Ready to record & post',     accent: 'var(--green)', pillBg: 'rgba(30,138,74,.06)',          pillBorder: 'rgba(30,138,74,.25)' },
+  { key: 'idea',        label: 'Ideation',   sub: 'Raw ideas & concepts',                 accent: 'var(--ink3)',  pillBg: 'var(--s3)',           pillBorder: 'var(--b2)' },
+  { key: 'shortlisted', label: 'Shortlisted',sub: 'Approved for development',             accent: 'var(--amber)', pillBg: 'rgba(184,104,0,.07)', pillBorder: 'rgba(184,104,0,.25)' },
+  { key: 'final',       label: 'Approved',   sub: 'Shark-approved, ready for pipeline',   accent: 'var(--green)', pillBg: 'rgba(30,138,74,.06)', pillBorder: 'rgba(30,138,74,.25)' },
 ]
 
 const NEXT: Record<ScriptStatus, ScriptStatus | null> = { idea: 'shortlisted', shortlisted: 'final', final: null }
@@ -48,13 +55,19 @@ const EMPTY: { title: string; hook: string; content: string; platform: Platform;
 }
 
 export default function ScriptsPage() {
-  const [scripts, setScripts]   = useState<Script[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [showAdd, setShowAdd]   = useState(false)
-  const [detail, setDetail]     = useState<Script | null>(null)
-  const [form, setForm]         = useState({ ...EMPTY })
-  const [saving, setSaving]     = useState(false)
-  const [editMode, setEditMode] = useState(false)
+  const { notify } = useNotifications()
+
+  const [scripts, setScripts]             = useState<Script[]>([])
+  const [loading, setLoading]             = useState(true)
+  const [showAdd, setShowAdd]             = useState(false)
+  const [detail, setDetail]               = useState<Script | null>(null)
+  const [form, setForm]                   = useState({ ...EMPTY })
+  const [saving, setSaving]               = useState(false)
+  const [editMode, setEditMode]           = useState(false)
+  const [sentToPipeline, setSentToPipeline] = useState<Set<string>>(new Set())
+  const [sendingId, setSendingId]         = useState<string | null>(null)
+  const [docs, setDocs]                   = useState<Record<string, DocAttachment[]>>({})
+  const [docForm, setDocForm]             = useState({ label: '', url: '' })
 
   const fetchScripts = useCallback(async () => {
     const supabase = createClient()
@@ -114,6 +127,50 @@ export default function ScriptsPage() {
     setDetail(s)
     setForm({ title: s.title, hook: s.hook ?? '', content: s.content ?? '', platform: s.platform, content_type: s.content_type, client: s.client ?? '', submitted_by: s.submitted_by })
     setEditMode(false)
+    setDocForm({ label: '', url: '' })
+  }
+
+  const sendToPipeline = async (script: Script) => {
+    setSendingId(script.id)
+    const supabase = createClient()
+    await supabase.from('content_calendar').insert({
+      title:        script.title,
+      platform:     script.platform,
+      content_type: script.content_type,
+      client:       script.client,
+      script_id:    script.id,
+      prod_status:  'draft',
+      date:         new Date().toISOString().split('T')[0],
+      notes:        script.hook ?? null,
+    })
+    setSentToPipeline(prev => new Set(prev).add(script.id))
+    setSendingId(null)
+    playSound('send')
+    notify('Sent to Pipeline: ' + script.title, 'success')
+  }
+
+  const addDoc = async (scriptId: string) => {
+    if (!docForm.label.trim() || !docForm.url.trim()) return
+    const existing = docs[scriptId] ?? []
+    const updated = [...existing, { label: docForm.label.trim(), url: docForm.url.trim() }]
+    setDocs(prev => ({ ...prev, [scriptId]: updated }))
+    setDocForm({ label: '', url: '' })
+    const supabase = createClient()
+    const { error } = await supabase.from('scripts').update({ docs: updated }).eq('id', scriptId)
+    if (error) {
+      // docs column may not exist — keep state local silently
+    }
+  }
+
+  const removeDoc = async (scriptId: string, idx: number) => {
+    const existing = docs[scriptId] ?? []
+    const updated = existing.filter((_, i) => i !== idx)
+    setDocs(prev => ({ ...prev, [scriptId]: updated }))
+    const supabase = createClient()
+    const { error } = await supabase.from('scripts').update({ docs: updated }).eq('id', scriptId)
+    if (error) {
+      // docs column may not exist — keep state local silently
+    }
   }
 
   const byStatus = (st: ScriptStatus) => scripts.filter(s => s.status === st)
@@ -164,6 +221,7 @@ export default function ScriptsPage() {
                     </div>
                   ) : items.map((s, i) => (
                     <ScriptCard key={s.id} script={s} isLast={i === items.length - 1} colAccent={col.accent}
+                      inPipeline={sentToPipeline.has(s.id)}
                       onOpen={() => openDetail(s)}
                       onForward={() => moveScript(s.id, 'forward')}
                       onBack={() => moveScript(s.id, 'back')}
@@ -248,11 +306,56 @@ export default function ScriptsPage() {
                 <div style={{ padding: '18px', marginBottom: 18, fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--ink4)', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '.08em', border: '0.5px dashed var(--b2)' }}>No script yet — click Edit to add it</div>
               )}
 
+              {/* Attachments */}
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--ink3)', letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>Attachments</div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--ink4)', marginBottom: 10, letterSpacing: '.04em' }}>Add Google Drive, Notion, Frame.io, or any URL</div>
+                {(docs[detail.id] ?? []).length > 0 && (
+                  <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    {(docs[detail.id] ?? []).map((doc, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'var(--s2)', border: '0.5px solid var(--b1)', padding: '6px 10px' }}>
+                        <a href={doc.url} target="_blank" rel="noreferrer" style={{ flex: 1, fontSize: 12, color: 'var(--blue)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.label}</a>
+                        <button onClick={() => removeDoc(detail.id, idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink4)', fontSize: 14, lineHeight: 1, padding: '0 2px', flexShrink: 0 }}>×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    className="login-input" style={{ margin: 0, flex: '0 0 100px', fontSize: 11 }}
+                    placeholder="Label" value={docForm.label}
+                    onChange={e => setDocForm(f => ({ ...f, label: e.target.value }))}
+                  />
+                  <input
+                    className="login-input" style={{ margin: 0, flex: 1, fontSize: 11 }}
+                    placeholder="https://…" value={docForm.url}
+                    onChange={e => setDocForm(f => ({ ...f, url: e.target.value }))}
+                  />
+                  <button
+                    className="top-btn"
+                    style={{ flexShrink: 0 }}
+                    disabled={!docForm.label.trim() || !docForm.url.trim()}
+                    onClick={() => addDoc(detail.id)}
+                  >Add</button>
+                </div>
+              </div>
+
               <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', paddingTop: 14, borderTop: '0.5px solid var(--b1)', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {PREV[detail.status] && <button className="top-btn" style={{ borderColor: 'var(--b2)', color: 'var(--ink3)', background: 'none' }} onClick={() => moveScript(detail.id, 'back')}>← Move back</button>}
-                  {NEXT[detail.status] && <button className="top-btn" onClick={() => moveScript(detail.id, 'forward')}>Move to {NEXT[detail.status] === 'shortlisted' ? 'Shortlisted' : 'Final'} →</button>}
-                  {detail.status === 'final' && <button className="top-btn" style={{ background: 'rgba(30,138,74,.08)', borderColor: 'rgba(30,138,74,.3)', color: 'var(--green)' }}>✓ Ready to post</button>}
+                  {NEXT[detail.status] && <button className="top-btn" onClick={() => moveScript(detail.id, 'forward')}>Move to {NEXT[detail.status] === 'shortlisted' ? 'Shortlisted' : 'Approved'} →</button>}
+                  {detail.status === 'final' && (
+                    sentToPipeline.has(detail.id)
+                      ? <button className="top-btn" disabled style={{ background: 'rgba(30,138,74,.08)', borderColor: 'rgba(30,138,74,.3)', color: 'var(--green)', cursor: 'default' }}>✓ In Pipeline</button>
+                      : <button
+                          className="top-btn"
+                          style={{ background: 'rgba(30,111,168,.08)', borderColor: 'rgba(30,111,168,.3)', color: 'var(--blue)' }}
+                          disabled={sendingId === detail.id}
+                          onClick={() => sendToPipeline(detail)}
+                        >
+                          {sendingId === detail.id ? 'Sending…' : '→ Send to Pipeline'}
+                        </button>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="top-btn" style={{ borderColor: 'var(--b2)', color: 'var(--ink3)', background: 'none' }} onClick={() => setEditMode(true)}>Edit</button>
@@ -267,8 +370,8 @@ export default function ScriptsPage() {
   )
 }
 
-function ScriptCard({ script, isLast, colAccent, onOpen, onForward, onBack }: {
-  script: Script; isLast: boolean; colAccent: string
+function ScriptCard({ script, isLast, colAccent, inPipeline, onOpen, onForward, onBack }: {
+  script: Script; isLast: boolean; colAccent: string; inPipeline: boolean
   onOpen: () => void; onForward: () => void; onBack: () => void
 }) {
   const [hovered, setHovered] = useState(false)
@@ -279,6 +382,7 @@ function ScriptCard({ script, isLast, colAccent, onOpen, onForward, onBack }: {
         <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '.05em', textTransform: 'uppercase', padding: '2px 7px', background: PLATFORM_BG[script.platform], color: PLATFORM_FG[script.platform], border: '0.5px solid currentColor' }}>{script.platform}</span>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '.05em', textTransform: 'uppercase', padding: '2px 7px', background: 'rgba(30,111,168,.06)', color: 'var(--blue)', border: '0.5px solid rgba(30,111,168,.18)' }}>{script.content_type}</span>
         {script.client && <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '.05em', textTransform: 'uppercase', padding: '2px 7px', background: 'rgba(184,104,0,.06)', color: 'var(--amber)', border: '0.5px solid rgba(184,104,0,.18)' }}>{script.client}</span>}
+        {inPipeline && <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '.05em', textTransform: 'uppercase', padding: '2px 7px', background: 'rgba(30,138,74,.08)', color: 'var(--green)', border: '0.5px solid rgba(30,138,74,.25)' }}>◉ In Pipeline</span>}
       </div>
       <div style={{ fontSize: 12.5, fontWeight: 400, color: 'var(--ink)', lineHeight: 1.4, marginBottom: script.hook ? 6 : 0 }}>{script.title}</div>
       {script.hook && <div style={{ fontSize: 11, color: 'var(--ink3)', fontStyle: 'italic', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: 6 }}>"{script.hook}"</div>}
@@ -287,7 +391,7 @@ function ScriptCard({ script, isLast, colAccent, onOpen, onForward, onBack }: {
         {hovered && (
           <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
             {PREV[script.status] && <button onClick={onBack} style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '3px 8px', background: 'none', border: '0.5px solid var(--b2)', color: 'var(--ink3)', cursor: 'pointer' }}>←</button>}
-            {NEXT[script.status] && <button onClick={onForward} style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '3px 8px', background: 'none', border: `0.5px solid ${colAccent}`, color: colAccent, cursor: 'pointer' }}>→</button>}
+            {NEXT[script.status] && !inPipeline && <button onClick={onForward} style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '3px 8px', background: 'none', border: `0.5px solid ${colAccent}`, color: colAccent, cursor: 'pointer' }}>→</button>}
           </div>
         )}
       </div>

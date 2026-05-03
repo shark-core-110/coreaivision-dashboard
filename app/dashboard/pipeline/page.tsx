@@ -187,6 +187,13 @@ export default function PipelinePage() {
     notify('Notes saved', 'info')
   }
 
+  async function saveDate(itemId: string, date: string) {
+    const sb = createClient()
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, date } : i))
+    setDetail(prev => prev ? { ...prev, date } : null)
+    await sb.from('content_calendar').update({ date }).eq('id', itemId)
+  }
+
   async function deleteItem(id: string) {
     if (!confirm('Delete this item from the pipeline?')) return
     const sb = createClient()
@@ -279,7 +286,13 @@ export default function PipelinePage() {
                       </div>
 
                       {/* title */}
-                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.4, marginBottom: 8 }}>{item.title}</div>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.4, marginBottom: item.script_id ? 4 : 8 }}>{item.title}</div>
+                      {/* script badge */}
+                      {item.script_id && (
+                        <div style={{ marginBottom: 8 }}>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '.05em', textTransform: 'uppercase', padding: '2px 6px', background: 'rgba(191,139,46,.08)', color: 'rgba(191,139,46,0.8)', border: '0.5px solid rgba(191,139,46,.25)' }}>◧ Script</span>
+                        </div>
+                      )}
 
                       {/* bottom: avatar + date + step buttons */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -383,7 +396,19 @@ export default function PipelinePage() {
               return <div style={{ background: s.bg, border: `0.5px solid ${s.border}`, padding: '5px 12px', marginBottom: 18, display: 'inline-block' }}><span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 500, letterSpacing: '.1em', textTransform: 'uppercase', color: s.color }}>{s.label}</span></div>
             })()}
 
-            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.45, marginBottom: 22 }}>{detail.title}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.45, marginBottom: detail.script_id ? 10 : 22 }}>{detail.title}</div>
+
+            {detail.script_id && (
+              <div style={{ marginBottom: 22, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '.05em', textTransform: 'uppercase', padding: '2px 7px', background: 'rgba(191,139,46,.08)', color: 'rgba(191,139,46,0.8)', border: '0.5px solid rgba(191,139,46,.25)' }}>◧ Script</span>
+                <a
+                  href="/dashboard/scripts"
+                  style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '.06em', textTransform: 'uppercase', padding: '4px 10px', background: 'var(--s2)', border: '0.5px solid var(--b2)', color: 'var(--ink3)', textDecoration: 'none', cursor: 'pointer' }}
+                >
+                  View Source Script ↗
+                </a>
+              </div>
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 22 }}>
               {([['Platform', detail.platform], ['Type', detail.content_type], ['Assigned', detail.assigned_to ?? '—'], ['Client', detail.client ?? '—'], ['Date', detail.date ?? '—'], ['Added', detail.created_at?.slice(0, 10) ?? '—']] as [string, string][]).map(([label, val]) => (
@@ -411,6 +436,19 @@ export default function PipelinePage() {
                 ))}
               </div>
             </div>
+
+            {/* scheduled date prompt */}
+            {detail.prod_status === 'scheduled' && (!detail.date || detail.date === todayStr()) && (
+              <div style={{ marginBottom: 22, background: 'rgba(125,60,152,.06)', border: '0.5px solid rgba(125,60,152,.22)', padding: '12px 14px' }}>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 500, letterSpacing: '.08em', textTransform: 'uppercase', color: '#7D3C98', marginBottom: 8 }}>Set publish date</div>
+                <input
+                  type="date"
+                  defaultValue={detail.date || todayStr()}
+                  style={{ width: '100%' }}
+                  onChange={e => { if (e.target.value) saveDate(detail.id, e.target.value) }}
+                />
+              </div>
+            )}
 
             {/* notes */}
             <div style={{ marginBottom: 22 }}>
