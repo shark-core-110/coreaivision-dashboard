@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import NotificationBell from '@/components/ui/NotificationBell'
 import { SoundToggle } from '@/components/SoundManager'
 
 export default function Topbar({ pageTitle }: { pageTitle: string }) {
   const [time, setTime] = useState('')
   const [date, setDate] = useState('')
+  const pathname = usePathname()
+  const onMyDashboard = pathname === '/dashboard/my'
 
   useEffect(() => {
     const tick = () => {
@@ -39,6 +42,38 @@ export default function Topbar({ pageTitle }: { pageTitle: string }) {
         <a className="top-btn top-btn-drive" href="https://drive.google.com/drive/folders/1kVzNHwpDZOXpGzlzbOaaK-iTWMcDaaQ9" target="_blank" rel="noreferrer">
           ◫ Drive
         </a>
+
+        {/* My Dashboard button — visible on every page except /dashboard/my itself */}
+        {!onMyDashboard && (
+          <Link
+            href="/dashboard/my"
+            className="top-btn"
+            style={{
+              background: 'rgba(191,139,46,0.12)',
+              border: '0.5px solid rgba(191,139,46,0.3)',
+              color: '#BF8B2E',
+              fontWeight: 600,
+            }}
+          >
+            ◈ My Dashboard
+          </Link>
+        )}
+
+        {/* Back to main — visible only on /dashboard/my */}
+        {onMyDashboard && (
+          <Link
+            href="/dashboard"
+            className="top-btn"
+            style={{
+              background: 'rgba(191,139,46,0.08)',
+              border: '0.5px solid rgba(191,139,46,0.2)',
+              color: '#BF8B2E',
+            }}
+          >
+            ← Main Dashboard
+          </Link>
+        )}
+
         <SoundToggle />
         <NotificationBell />
         <div>

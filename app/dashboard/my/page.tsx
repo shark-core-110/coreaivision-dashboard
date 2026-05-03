@@ -1,6 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 
 interface Task {
   id: string
@@ -21,15 +23,33 @@ interface CalItem {
   content_type: string
 }
 
+// Dark theme tokens — distinct from the light cream main dashboard
+const D = {
+  bg:      '#0B0907',
+  surface: '#14110D',
+  card:    '#1A1510',
+  border:  'rgba(191,139,46,0.14)',
+  borderStrong: 'rgba(191,139,46,0.28)',
+  gold:    '#BF8B2E',
+  goldDim: 'rgba(191,139,46,0.7)',
+  text:    '#EDE8DE',
+  sub:     '#8A7E6E',
+  dim:     '#4A4235',
+  green:   '#22c55e',
+  blue:    '#1a70ad',
+  amber:   '#f59e0b',
+  red:     '#ef4444',
+}
+
 const STATUS_COLOR: Record<string, string> = {
-  done:          '#22c55e',
-  posted:        '#22c55e',
-  'in-progress': '#1a70ad',
-  filming:       '#1a70ad',
-  editing:       '#1a70ad',
-  scheduled:     '#f59e0b',
-  draft:         'var(--ink3)',
-  todo:          'var(--ink3)',
+  done:          D.green,
+  posted:        D.green,
+  'in-progress': D.blue,
+  filming:       D.blue,
+  editing:       D.blue,
+  scheduled:     D.amber,
+  draft:         D.sub,
+  todo:          D.sub,
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -55,55 +75,135 @@ function getGreeting() {
   return 'Good evening'
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const color = STATUS_COLOR[status] ?? 'var(--ink3)'
+function DarkBadge({ status }: { status: string }) {
+  const color = STATUS_COLOR[status] ?? D.sub
   return (
     <span style={{
-      fontSize: 10, padding: '2px 7px', borderRadius: 10, whiteSpace: 'nowrap',
-      background: `${color}22`, color,
+      fontSize: 10, padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap',
+      background: `${color}18`, color, border: `0.5px solid ${color}40`,
     }}>
       {STATUS_LABEL[status] ?? status}
     </span>
   )
 }
 
-export default function MyDashboard() {
-  const [name, setName]       = useState('')
-  const [tasks, setTasks]     = useState<Task[]>([])
-  const [cal, setCal]         = useState<CalItem[]>([])
-  const [loading, setLoading] = useState(true)
+function SectionLabel({ children, color }: { children: React.ReactNode; color?: string }) {
+  return (
+    <div style={{
+      fontSize: 10, fontWeight: 600, letterSpacing: '.1em',
+      textTransform: 'uppercase', color: color ?? D.goldDim,
+      marginBottom: 10, marginTop: 4,
+    }}>
+      {children}
+    </div>
+  )
+}
 
+function DarkCard({ children, danger }: { children: React.ReactNode; danger?: boolean }) {
+  return (
+    <div style={{
+      background: D.card,
+      border: `0.5px solid ${danger ? 'rgba(239,68,68,.25)' : D.border}`,
+      borderRadius: 10, overflow: 'hidden', marginBottom: 16,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function DarkRow({
+  children, last,
+}: { children: React.ReactNode; last: boolean }) {
+  return (
+    <div style={{
+      padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 10,
+      borderBottom: last ? 'none' : `0.5px solid ${D.border}`,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function Dot({ color }: { color: string }) {
+  return (
+    <div style={{
+      width: 6, height: 6, borderRadius: '50%',
+      background: color, flexShrink: 0, marginTop: 5,
+    }} />
+  )
+}
+
+export default function MyDashboard() {
+  const { user } = useCurrentUser()
+  const [name, setName]         = useState('')
+  const [tasks, setTasks]       = useState<Task[]>([])
+  const [cal, setCal]           = useState<CalItem[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [lastSync, setLastSync] = useState('')
+
+  const fetchData = useCallback(async (userName: string) => {
+    const supabase = createClient()
+    const [tasksRes, calRes] = await Promise.all([
+      supabase
+        .from('tasks')
+        .select('id, title, section, status, due_date, project_name')
+        .ilike('assigned_to', userName)
+        .not('status', 'eq', 'done')
+        .order('due_date', { ascending: true, nullsFirst: false }),
+      supabase
+        .from('content_calendar')
+        .select('id, title, date, platform, prod_status, client, content_type')
+        .ilike('assigned_to', userName)
+        .order('date', { ascending: true }),
+    ])
+    setTasks((tasksRes.data as Task[]) ?? [])
+    setCal((calRes.data as CalItem[]) ?? [])
+    setLastSync(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+    setLoading(false)
+  }, [])
+
+  // Initial load
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(async ({ data }) => {
+    supabase.auth.getUser().then(({ data }) => {
       const userName = (data.user?.user_metadata?.full_name as string) ?? ''
       setName(userName)
-      if (!userName) { setLoading(false); return }
-
-      const [tasksRes, calRes] = await Promise.all([
-        supabase
-          .from('tasks')
-          .select('id, title, section, status, due_date, project_name')
-          .ilike('assigned_to', userName)
-          .not('status', 'eq', 'done')
-          .order('due_date', { ascending: true, nullsFirst: false }),
-        supabase
-          .from('content_calendar')
-          .select('id, title, date, platform, prod_status, client, content_type')
-          .ilike('assigned_to', userName)
-          .order('date', { ascending: true }),
-      ])
-
-      setTasks((tasksRes.data as Task[]) ?? [])
-      setCal((calRes.data as CalItem[]) ?? [])
-      setLoading(false)
+      if (userName) fetchData(userName)
+      else setLoading(false)
     })
-  }, [])
+  }, [fetchData])
+
+  // Real-time sync — re-fetch on any change to tasks or content_calendar
+  useEffect(() => {
+    if (!name) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel('my-dashboard-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+        fetchData(name)
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'content_calendar' }, () => {
+        fetchData(name)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [name, fetchData])
+
+  // Full-bleed dark wrapper — covers the light .main background
+  const wrapStyle: React.CSSProperties = {
+    margin: '-32px -36px -64px -32px',
+    padding: '32px 36px 64px 32px',
+    background: D.bg,
+    minHeight: '100vh',
+    color: D.text,
+  }
 
   if (loading) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: 'var(--ink3)', fontSize: 14 }}>
-        Loading your dashboard…
+      <div style={wrapStyle}>
+        <div style={{ padding: 60, textAlign: 'center', color: D.sub, fontSize: 14 }}>
+          Loading your dashboard…
+        </div>
       </div>
     )
   }
@@ -115,148 +215,173 @@ export default function MyDashboard() {
   const activeCal = cal.filter(c => c.prod_status !== 'posted')
   const postedCal = cal.filter(c => c.prod_status === 'posted')
 
-  const taskSummary = tasks.length === 0
-    ? 'No open tasks — check back after your next sync with Shark.'
-    : `${tasks.length} open task${tasks.length !== 1 ? 's' : ''} · ${activeCal.length} active pipeline item${activeCal.length !== 1 ? 's' : ''}`
-
   return (
-    <>
+    <div style={wrapStyle}>
+      {/* Top bar */}
       <div style={{
-        background: 'rgba(26,112,173,.06)', border: '0.5px solid rgba(26,112,173,.2)',
-        borderRadius: 8, padding: '10px 16px', marginBottom: 20,
-        fontSize: 12, color: 'var(--ink3)', lineHeight: 1.6,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 28,
+        paddingBottom: 20,
+        borderBottom: `0.5px solid ${D.border}`,
       }}>
-        <strong style={{ color: 'var(--blue)' }}>My Dashboard</strong>
-        &nbsp;·&nbsp; Read-only view
-        &nbsp;·&nbsp; All edits happen in the main dashboard
-        &nbsp;·&nbsp; Tasks refresh on page load
-      </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 18, color: D.gold }}>◈</span>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: D.text }}>
+              {getGreeting()}, {name} 👋
+            </div>
+            <div style={{ fontSize: 12, color: D.sub, marginTop: 2 }}>
+              Personal Dashboard &nbsp;·&nbsp; Live sync
+              {lastSync && <span style={{ color: D.dim }}> &nbsp;·&nbsp; Updated {lastSync}</span>}
+            </div>
+          </div>
+        </div>
 
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--ink1)' }}>
-          {getGreeting()}, {name} 👋
-        </div>
-        <div style={{ fontSize: 13, color: 'var(--ink3)', marginTop: 4 }}>{taskSummary}</div>
-      </div>
-
-      <div className="kpi-strip" style={{ marginBottom: 28 }}>
-        <div className="kpi">
-          <div className="kpi-label">Open Tasks</div>
-          <div className="kpi-val">{tasks.length}</div>
-          <div className="kpi-sub">assigned to you</div>
-          <div className="kpi-bar">
-            <div className="kpi-bar-fill prog-blue" style={{ width: `${Math.min(tasks.length * 10, 100)}%` }} />
-          </div>
-        </div>
-        <div className={`kpi${overdue.length > 0 ? ' kpi-gold' : ''}`}>
-          <div className="kpi-label">Due Today</div>
-          <div className="kpi-val">{dueToday.length}</div>
-          <div className="kpi-sub">
-            {overdue.length > 0 ? `⚠ ${overdue.length} overdue` : 'on schedule'}
-          </div>
-          <div className="kpi-bar">
-            <div className="kpi-bar-fill prog-gold" style={{ width: `${Math.min(dueToday.length * 25, 100)}%` }} />
-          </div>
-        </div>
-        <div className="kpi kpi-green">
-          <div className="kpi-label">In Pipeline</div>
-          <div className="kpi-val">{activeCal.length}</div>
-          <div className="kpi-sub">{postedCal.length} already posted</div>
-          <div className="kpi-bar">
-            <div className="kpi-bar-fill prog-green" style={{ width: `${Math.min(activeCal.length * 15, 100)}%` }} />
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{
+            fontSize: 10, padding: '3px 10px', borderRadius: 20,
+            background: `${D.gold}18`, color: D.goldDim,
+            border: `0.5px solid ${D.gold}30`,
+          }}>
+            ◉ Live
+          </span>
+          {user?.isAdmin && (
+            <Link href="/dashboard" style={{
+              fontSize: 12, padding: '6px 12px', borderRadius: 8,
+              background: D.surface, border: `0.5px solid ${D.border}`,
+              color: D.sub, textDecoration: 'none',
+            }}>
+              ← Main Dashboard
+            </Link>
+          )}
         </div>
       </div>
 
-      <div className="grid2">
+      {/* KPI strip */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 12, marginBottom: 28,
+      }}>
+        {[
+          { label: 'Open Tasks', val: tasks.length, sub: 'assigned to you', pct: Math.min(tasks.length * 10, 100), color: D.blue },
+          {
+            label: 'Due Today', val: dueToday.length,
+            sub: overdue.length > 0 ? `⚠ ${overdue.length} overdue` : 'on schedule',
+            pct: Math.min(dueToday.length * 25, 100),
+            color: overdue.length > 0 ? D.amber : D.gold,
+          },
+          { label: 'In Pipeline', val: activeCal.length, sub: `${postedCal.length} posted`, pct: Math.min(activeCal.length * 15, 100), color: D.green },
+        ].map(k => (
+          <div key={k.label} style={{
+            background: D.surface, border: `0.5px solid ${D.border}`,
+            borderRadius: 10, padding: '14px 16px',
+          }}>
+            <div style={{ fontSize: 10, color: D.sub, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 4 }}>{k.label}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: D.text, lineHeight: 1 }}>{k.val}</div>
+            <div style={{ fontSize: 11, color: D.sub, margin: '4px 0 8px' }}>{k.sub}</div>
+            <div style={{ height: 3, background: D.card, borderRadius: 2 }}>
+              <div style={{ height: 3, borderRadius: 2, background: k.color, width: `${k.pct}%`, transition: 'width .4s ease' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Main grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        {/* Left — Tasks */}
         <div>
           {overdue.length > 0 && (
             <>
-              <div className="sec" style={{ color: '#ef4444' }}>⚠ Overdue</div>
-              <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(239,68,68,.3)' }}>
-                {overdue.map(t => (
-                  <div key={t.id} className="bn-row">
-                    <div className="bn-dot" style={{ background: '#ef4444' }} />
-                    <div className="bn-text">{t.title}</div>
-                    <div className="bn-owner" style={{ color: '#ef4444' }}>{fmtDate(t.due_date)}</div>
-                  </div>
+              <SectionLabel color={D.red}>⚠ Overdue</SectionLabel>
+              <DarkCard danger>
+                {overdue.map((t, i) => (
+                  <DarkRow key={t.id} last={i === overdue.length - 1}>
+                    <Dot color={D.red} />
+                    <div style={{ flex: 1, fontSize: 13 }}>{t.title}</div>
+                    <span style={{ fontSize: 11, color: D.red, whiteSpace: 'nowrap' }}>{fmtDate(t.due_date)}</span>
+                  </DarkRow>
                 ))}
-              </div>
+              </DarkCard>
             </>
           )}
 
-          <div className="sec">Due Today</div>
-          <div className="card" style={{ marginBottom: 16 }}>
+          <SectionLabel>Due Today</SectionLabel>
+          <DarkCard>
             {dueToday.length === 0
-              ? <div style={{ color: 'var(--ink3)', fontSize: 13 }}>Nothing due today — you&apos;re clear.</div>
-              : dueToday.map(t => (
-                <div key={t.id} className="bn-row">
-                  <div className="bn-dot bn-crit" />
-                  <div className="bn-text">{t.title}</div>
-                  <StatusBadge status={t.status} />
-                </div>
+              ? <div style={{ padding: '12px 14px', fontSize: 13, color: D.sub }}>Nothing due today — you&apos;re clear.</div>
+              : dueToday.map((t, i) => (
+                <DarkRow key={t.id} last={i === dueToday.length - 1}>
+                  <Dot color={D.amber} />
+                  <div style={{ flex: 1, fontSize: 13 }}>{t.title}</div>
+                  <DarkBadge status={t.status} />
+                </DarkRow>
               ))
             }
-          </div>
+          </DarkCard>
 
-          <div className="sec">Upcoming</div>
-          <div className="card">
+          <SectionLabel>Upcoming</SectionLabel>
+          <DarkCard>
             {upcoming.length === 0
-              ? <div style={{ color: 'var(--ink3)', fontSize: 13 }}>No upcoming tasks.</div>
-              : upcoming.map(t => (
-                <div key={t.id} className="bn-row">
-                  <div className="bn-dot" style={{ background: 'var(--ink4)' }} />
+              ? <div style={{ padding: '12px 14px', fontSize: 13, color: D.sub }}>No upcoming tasks.</div>
+              : upcoming.map((t, i) => (
+                <DarkRow key={t.id} last={i === upcoming.length - 1}>
+                  <Dot color={D.dim} />
                   <div style={{ flex: 1 }}>
-                    <div className="bn-text">{t.title}</div>
+                    <div style={{ fontSize: 13 }}>{t.title}</div>
                     {t.project_name && (
-                      <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>{t.project_name}</div>
+                      <div style={{ fontSize: 11, color: D.sub, marginTop: 2 }}>{t.project_name}</div>
                     )}
                   </div>
-                  <div className="bn-owner">{fmtDate(t.due_date)}</div>
-                </div>
+                  <span style={{ fontSize: 11, color: D.dim, whiteSpace: 'nowrap' }}>{fmtDate(t.due_date)}</span>
+                </DarkRow>
               ))
             }
-          </div>
+          </DarkCard>
         </div>
 
+        {/* Right — Pipeline */}
         <div>
-          <div className="sec">My Pipeline</div>
-          <div className="card" style={{ marginBottom: 16 }}>
+          <SectionLabel>My Pipeline</SectionLabel>
+          <DarkCard>
             {activeCal.length === 0
-              ? <div style={{ color: 'var(--ink3)', fontSize: 13 }}>No active pipeline items yet.</div>
-              : activeCal.map(item => (
-                <div key={item.id} className="row">
-                  <div className="row-left" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-                    <span className="row-name">{item.title}</span>
-                    <span style={{ fontSize: 11, color: 'var(--ink3)' }}>
+              ? <div style={{ padding: '12px 14px', fontSize: 13, color: D.sub }}>No active pipeline items yet.</div>
+              : activeCal.map((item, i) => (
+                <DarkRow key={item.id} last={i === activeCal.length - 1}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13 }}>{item.title}</div>
+                    <div style={{ fontSize: 11, color: D.sub, marginTop: 2 }}>
                       {item.platform}&nbsp;·&nbsp;{fmtDate(item.date)}
                       {item.client ? ` · ${item.client}` : ''}
-                    </span>
+                    </div>
                   </div>
-                  <StatusBadge status={item.prod_status} />
-                </div>
+                  <DarkBadge status={item.prod_status} />
+                </DarkRow>
               ))
             }
-          </div>
+          </DarkCard>
 
           {postedCal.length > 0 && (
             <>
-              <div className="sec">Posted</div>
-              <div className="card">
-                {postedCal.map(item => (
-                  <div key={item.id} className="row" style={{ opacity: 0.55 }}>
-                    <div className="row-left">
-                      <span style={{ fontSize: 11, color: 'var(--ink3)' }}>{fmtDate(item.date)}</span>
-                      <span className="row-name">{item.title}</span>
+              <SectionLabel>Posted</SectionLabel>
+              <DarkCard>
+                {postedCal.map((item, i) => (
+                  <DarkRow key={item.id} last={i === postedCal.length - 1}>
+                    <div style={{ flex: 1, opacity: 0.5 }}>
+                      <div style={{ fontSize: 13 }}>{item.title}</div>
+                      <div style={{ fontSize: 11, color: D.sub, marginTop: 2 }}>{fmtDate(item.date)}</div>
                     </div>
-                    <StatusBadge status="posted" />
-                  </div>
+                    <DarkBadge status="posted" />
+                  </DarkRow>
                 ))}
-              </div>
+              </DarkCard>
             </>
           )}
         </div>
       </div>
-    </>
+
+      <div style={{ marginTop: 40, textAlign: 'center', fontSize: 11, color: D.dim }}>
+        Core AI Vision · Personal Mode · All edits happen in the main dashboard
+      </div>
+    </div>
   )
 }
