@@ -5,7 +5,8 @@ export function middleware(request: NextRequest) {
 
   const isAuthPage = pathname.startsWith('/login')
   const isCallbackPath = pathname.startsWith('/auth/callback')
-  const isPublicPath = isAuthPage || isCallbackPath || pathname === '/'
+  const isTeamPage = pathname.startsWith('/team/')
+  const isPublicPath = isAuthPage || isCallbackPath || isTeamPage || pathname === '/'
 
   // Supabase stores session in cookies prefixed with sb- and suffixed with -auth-token
   const hasSession = request.cookies.getAll().some(

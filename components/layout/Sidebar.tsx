@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 
-const navItems = [
+const adminNavItems = [
   { section: 'Command', items: [
     { label: 'Overview',      href: '/dashboard',             icon: '◈', key: '1' },
     { label: "Today's Focus", href: '/dashboard/today',       icon: '◉', key: 'T' },
@@ -25,9 +26,9 @@ const navItems = [
     { label: 'Lyra Deals',    href: '/dashboard/lyra',        icon: '◉', key: 'D' },
   ]},
   { section: 'Growth', items: [
-    { label: 'Instagram',     href: '/dashboard/instagram',      icon: '◆', key: '5' },
-    { label: 'Clients',       href: '/dashboard/clients',        icon: '◎', key: '6' },
-    { label: 'Marketing',     href: '/dashboard/marketing',      icon: '◐', key: '8' },
+    { label: 'Instagram',     href: '/dashboard/instagram',   icon: '◆', key: '5' },
+    { label: 'Clients',       href: '/dashboard/clients',     icon: '◎', key: '6' },
+    { label: 'Marketing',     href: '/dashboard/marketing',   icon: '◐', key: '8' },
   ]},
   { section: 'Vision', items: [
     { label: 'Goals',         href: '/dashboard/goals',       icon: '◑', key: '9' },
@@ -36,10 +37,47 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const { user, loading } = useCurrentUser()
 
+  // Team member view — minimal nav
+  if (!loading && user && !user.isAdmin) {
+    return (
+      <nav className="nav">
+        <div>
+          <div className="nav-section">My Workspace</div>
+          <Link
+            href="/dashboard/my"
+            className={`nav-tab ${pathname === '/dashboard/my' ? 'active' : ''}`}
+          >
+            <span className="nav-tab-icon">◈</span>
+            My Dashboard
+          </Link>
+        </div>
+
+        <div style={{ marginTop: 'auto', padding: '16px 0 8px' }}>
+          <div style={{
+            margin: '0 8px',
+            padding: '10px 12px',
+            background: 'var(--s2)',
+            border: '0.5px solid var(--b1)',
+            borderRadius: 8,
+            fontSize: 12,
+            color: 'var(--ink3)',
+          }}>
+            <div style={{ fontWeight: 600, color: 'var(--ink2)', marginBottom: 3 }}>
+              {user.name}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--ink4)' }}>{user.email}</div>
+          </div>
+        </div>
+      </nav>
+    )
+  }
+
+  // Admin (Shark) view — full nav
   return (
     <nav className="nav">
-      {navItems.map((group) => (
+      {adminNavItems.map((group) => (
         <div key={group.section}>
           <div className="nav-section">{group.section}</div>
           {group.items.map((item) => (

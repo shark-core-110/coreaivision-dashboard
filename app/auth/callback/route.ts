@@ -25,7 +25,13 @@ export async function GET(request: Request) {
     )
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      const { data: { user } } = await supabase.auth.getUser()
+      const hasName = !!(user?.user_metadata?.full_name as string | undefined)
+      const isAdmin = user?.email === 'shark@coreaivision.com'
+
+      if (!hasName) return NextResponse.redirect(`${origin}/dashboard/onboarding`)
+      if (isAdmin) return NextResponse.redirect(`${origin}/dashboard`)
+      return NextResponse.redirect(`${origin}/dashboard/my`)
     }
   }
 
