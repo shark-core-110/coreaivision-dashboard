@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { isAdminEmail } from '@/lib/admin'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser()
       const hasName = !!(user?.user_metadata?.full_name as string | undefined)
-      const isAdmin = user?.email === 'shark@coreaivision.com'
+      const isAdmin = isAdminEmail(user?.email ?? '')
 
       if (!hasName) return NextResponse.redirect(`${origin}/dashboard/onboarding`)
       if (isAdmin) return NextResponse.redirect(`${origin}/dashboard`)

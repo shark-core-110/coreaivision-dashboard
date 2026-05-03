@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { isAdminEmail } from '@/lib/admin'
 
 export interface CurrentUser {
   id: string
@@ -22,7 +23,7 @@ export function useCurrentUser(): { user: CurrentUser | null; loading: boolean }
       }
       const email = data.user.email ?? ''
       const name = (data.user.user_metadata?.full_name as string) ?? ''
-      const isAdmin = email === 'shark@coreaivision.com'
+      const isAdmin = isAdminEmail(email)
       setUser({ id: data.user.id, email, name, isAdmin })
       setLoading(false)
     })
