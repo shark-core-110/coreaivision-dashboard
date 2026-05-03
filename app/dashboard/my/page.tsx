@@ -11,6 +11,10 @@ interface Task {
   status: string
   due_date: string | null
   project_name: string | null
+  source?: 'supabase' | 'notion'
+  type?: string | null
+  notes?: string | null
+  notion_url?: string
 }
 
 interface CalItem {
@@ -143,7 +147,7 @@ export default function MyDashboard() {
 
   const fetchData = useCallback(async (userName: string) => {
     const supabase = createClient()
-    const [tasksRes, calRes] = await Promise.all([
+    const [tasksRes, calRes, notionRes] = await Promise.all([
       supabase
         .from('tasks')
         .select('id, title, section, status, due_date, project_name')
@@ -155,8 +159,13 @@ export default function MyDashboard() {
         .select('id, title, date, platform, prod_status, client, content_type')
         .ilike('assigned_to', userName)
         .order('date', { ascending: true }),
+      fetch(`/api/notion/tasks?name=${encodeURIComponent(userName)}`).then(r => r.json()).catch(() => ({ tasks: [] })),
     ])
-    setTasks((tasksRes.data as Task[]) ?? [])
+
+    const supabaseTasks = ((tasksRes.data as Task[]) ?? []).map(t => ({ ...t, source: 'supabase' as const }))
+    const notionTasks   = ((notionRes.tasks ?? []) as Task[]).map((t: Task) => ({ ...t, section: t.type ?? 'Notion', source: 'notion' as const }))
+
+    setTasks([...supabaseTasks, ...notionTasks])
     setCal((calRes.data as CalItem[]) ?? [])
     setLastSync(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
     setLoading(false)
@@ -312,7 +321,18 @@ export default function MyDashboard() {
               : dueToday.map((t, i) => (
                 <DarkRow key={t.id} last={i === dueToday.length - 1}>
                   <Dot color={D.amber} />
-                  <div style={{ flex: 1, fontSize: 13 }}>{t.title}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 13 }}>{t.title}</span>
+                      {t.source === 'notion' && (
+                        <a href={t.notion_url} target="_blank" rel="noreferrer" style={{
+                          fontSize: 9, padding: '1px 5px', borderRadius: 4,
+                          background: 'rgba(255,255,255,.06)', color: D.sub,
+                          textDecoration: 'none', border: `0.5px solid ${D.dim}`,
+                        }}>N</a>
+                      )}
+                    </div>
+                  </div>
                   <DarkBadge status={t.status} />
                 </DarkRow>
               ))
@@ -327,9 +347,21 @@ export default function MyDashboard() {
                 <DarkRow key={t.id} last={i === upcoming.length - 1}>
                   <Dot color={D.dim} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13 }}>{t.title}</div>
-                    {t.project_name && (
-                      <div style={{ fontSize: 11, color: D.sub, marginTop: 2 }}>{t.project_name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 13 }}>{t.title}</span>
+                      {t.source === 'notion' && (
+                        <a href={t.notion_url} target="_blank" rel="noreferrer" style={{
+                          fontSize: 9, padding: '1px 5px', borderRadius: 4,
+                          background: 'rgba(255,255,255,.06)', color: D.sub,
+                          textDecoration: 'none', border: `0.5px solid ${D.dim}`,
+                        }}>N</a>
+                      )}
+                    </div>
+                    {(t.project_name || t.type) && (
+                      <div style={{ fontSize: 11, color: D.sub, marginTop: 2 }}>{t.project_name ?? t.type}</div>
+                    )}
+                    {t.notes && (
+                      <div style={{ fontSize: 11, color: D.dim, marginTop: 1 }}>{t.notes}</div>
                     )}
                   </div>
                   <span style={{ fontSize: 11, color: D.dim, whiteSpace: 'nowrap' }}>{fmtDate(t.due_date)}</span>
