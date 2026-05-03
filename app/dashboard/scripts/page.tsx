@@ -9,6 +9,15 @@ type ScriptStatus = 'idea' | 'shortlisted' | 'final'
 type Platform     = 'Reel' | 'YouTube Short' | 'TikTok' | 'Carousel' | 'Long-form' | 'Story'
 type ContentType  = 'Hook / Viral' | 'Educational' | 'Product Demo' | 'Brand Story' | 'Behind the Scenes' | 'Trending Audio'
 
+interface ParsedScript {
+  title:        string
+  hook:         string
+  content:      string
+  platform:     Platform
+  content_type: ContentType
+  client:       string | null
+}
+
 interface DocAttachment {
   label: string
   url: string
@@ -68,6 +77,14 @@ export default function ScriptsPage() {
   const [sendingId, setSendingId]         = useState<string | null>(null)
   const [docs, setDocs]                   = useState<Record<string, DocAttachment[]>>({})
   const [docForm, setDocForm]             = useState({ label: '', url: '' })
+
+  // Bulk import state
+  const [showBulk, setShowBulk]           = useState(false)
+  const [bulkText, setBulkText]           = useState('')
+  const [bulkParsed, setBulkParsed]       = useState<ParsedScript[]>([])
+  const [bulkStep, setBulkStep]           = useState<'paste' | 'preview' | 'importing'>('paste')
+  const [bulkProgress, setBulkProgress]   = useState(0)
+  const [bulkParsing, setBulkParsing]     = useState(false)
 
   const fetchScripts = useCallback(async () => {
     const supabase = createClient()
@@ -173,6 +190,63 @@ export default function ScriptsPage() {
     }
   }
 
+  const parseBulk = async () => {
+    if (!bulkText.trim()) return
+    setBulkParsing(true)
+    try {
+      const res  = await fetch('/api/scripts/parse-bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: bulkText }) })
+      const data = await res.json() as { scripts?: ParsedScript[]; error?: string }
+      if (!res.ok || data.error) throw new Error(data.error ?? 'Parse failed')
+      setBulkParsed(data.scripts ?? [])
+      setBulkStep('preview')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      notify('Parse failed: ' + msg, 'error')
+    } finally {
+      setBulkParsing(false)
+    }
+  }
+
+  const importBulk = async () => {
+    if (bulkParsed.length === 0) return
+    setBulkStep('importing')
+    setBulkProgress(0)
+    const supabase = createClient()
+    const BATCH = 10
+    let done = 0
+    for (let i = 0; i < bulkParsed.length; i += BATCH) {
+      const batch = bulkParsed.slice(i, i + BATCH).map(p => ({
+        title:        p.title,
+        hook:         p.hook || null,
+        content:      p.content || null,
+        platform:     p.platform,
+        content_type: p.content_type,
+        client:       p.client || null,
+        status:       'idea' as ScriptStatus,
+        submitted_by: 'Shark',
+      }))
+      await supabase.from('scripts').insert(batch)
+      done += batch.length
+      setBulkProgress(done)
+    }
+    setShowBulk(false)
+    setBulkText('')
+    setBulkParsed([])
+    setBulkStep('paste')
+    setBulkProgress(0)
+    fetchScripts()
+    playSound('success')
+    notify(`${done} scripts imported`, 'success')
+  }
+
+  const removeParsed = (i: number) => {
+    setBulkParsed(prev => prev.filter((_, idx) => idx !== i))
+  }
+
+  const editParsed = (i: number, field: keyof ParsedScript, value: string) => {
+    setBulkParsed(prev => prev.map((item, idx) => idx === i ? { ...item, [field]: value } : item))
+  }
+
   const byStatus = (st: ScriptStatus) => scripts.filter(s => s.status === st)
 
   return (
@@ -191,9 +265,14 @@ export default function ScriptsPage() {
         <div style={{ fontSize: 12, color: 'var(--ink3)', fontFamily: 'var(--mono)', letterSpacing: '.04em' }}>
           {scripts.length} total &nbsp;·&nbsp; {byStatus('idea').length} ideas &nbsp;·&nbsp; {byStatus('shortlisted').length} shortlisted &nbsp;·&nbsp; {byStatus('final').length} final
         </div>
-        <button className="top-btn" onClick={() => { setShowAdd(true); setForm({ ...EMPTY }) }}>
-          <span style={{ fontSize: 14 }}>+</span> New Script Idea
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="top-btn" onClick={() => { setBulkText(''); setBulkParsed([]); setBulkStep('paste'); setShowBulk(true) }}>
+            <span style={{ fontSize: 12 }}>⬆</span> Bulk Import
+          </button>
+          <button className="top-btn" onClick={() => { setShowAdd(true); setForm({ ...EMPTY }) }}>
+            <span style={{ fontSize: 14 }}>+</span> New Script Idea
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -255,6 +334,80 @@ export default function ScriptsPage() {
             <button className="top-btn" style={{ borderColor: 'var(--b2)', color: 'var(--ink3)', background: 'none' }} onClick={() => setShowAdd(false)}>Cancel</button>
             <button className="top-btn" onClick={addScript} disabled={saving || !form.title.trim()}>{saving ? 'Saving…' : 'Add to Ideation'}</button>
           </div>
+        </Modal>
+      )}
+
+      {showBulk && (
+        <Modal title="Bulk Import Scripts" onClose={() => { setShowBulk(false); setBulkStep('paste') }} wide>
+          {bulkStep === 'paste' && (
+            <>
+              <textarea
+                style={{ width: '100%', minHeight: 280, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 1.7, padding: '12px 14px', background: 'var(--s2)', border: '0.5px solid var(--b2)', color: 'var(--ink)', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
+                placeholder={"Paste from Google Sheets, Google Docs, or any text with your scripts. Works with tabs, labels like HOOK:/VOICEOVER:, numbered scripts, or free-form."}
+                value={bulkText}
+                onChange={e => setBulkText(e.target.value)}
+              />
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--ink4)', marginTop: 8, letterSpacing: '.03em' }}>
+                Claude will extract title, hook, voiceover, platform, and content type from whatever you paste
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', paddingTop: 16 }}>
+                <button className="top-btn" style={{ borderColor: 'var(--b2)', color: 'var(--ink3)', background: 'none' }} onClick={() => setShowBulk(false)}>Cancel</button>
+                <button className="top-btn" onClick={parseBulk} disabled={bulkParsing || !bulkText.trim()}>
+                  {bulkParsing ? 'Parsing with AI…' : 'Parse with AI'}
+                </button>
+              </div>
+            </>
+          )}
+
+          {bulkStep === 'preview' && (
+            <>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--ink3)', marginBottom: 12, letterSpacing: '.04em' }}>
+                {bulkParsed.length} script{bulkParsed.length !== 1 ? 's' : ''} detected — click a title or hook cell to edit inline
+              </div>
+              <div style={{ maxHeight: 400, overflowY: 'auto', border: '0.5px solid var(--b2)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                  <thead>
+                    <tr style={{ background: 'var(--s2)', position: 'sticky', top: 0, zIndex: 1 }}>
+                      {['#', 'Title', 'Hook', 'Platform', 'Content Type', 'Client', ''].map(h => (
+                        <th key={h} style={{ padding: '7px 10px', textAlign: 'left', fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--ink3)', borderBottom: '0.5px solid var(--b2)', fontWeight: 400, whiteSpace: 'nowrap' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkParsed.map((p, i) => (
+                      <tr key={i} style={{ borderBottom: '0.5px solid var(--b1)' }}>
+                        <td style={{ padding: '6px 10px', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--ink4)', width: 28 }}>{i + 1}</td>
+                        <td style={{ padding: '4px 6px', minWidth: 120, maxWidth: 200 }}>
+                          <InlineEdit value={p.title} onChange={v => editParsed(i, 'title', v)} />
+                        </td>
+                        <td style={{ padding: '4px 6px', minWidth: 140, maxWidth: 220 }}>
+                          <InlineEdit value={p.hook.length > 60 ? p.hook.slice(0, 60) + '…' : p.hook} fullValue={p.hook} onChange={v => editParsed(i, 'hook', v)} />
+                        </td>
+                        <td style={{ padding: '6px 10px', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--ink2)', whiteSpace: 'nowrap' }}>{p.platform}</td>
+                        <td style={{ padding: '6px 10px', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--ink2)', whiteSpace: 'nowrap' }}>{p.content_type}</td>
+                        <td style={{ padding: '6px 10px', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--ink3)' }}>{p.client ?? '—'}</td>
+                        <td style={{ padding: '4px 8px', textAlign: 'center' }}>
+                          <button onClick={() => removeParsed(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink4)', fontSize: 14, lineHeight: 1, padding: '0 2px' }}>×</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', paddingTop: 16 }}>
+                <button className="top-btn" style={{ borderColor: 'var(--b2)', color: 'var(--ink3)', background: 'none' }} onClick={() => setBulkStep('paste')}>← Back</button>
+                <button className="top-btn" onClick={importBulk} disabled={bulkParsed.length === 0}>
+                  Import {bulkParsed.length} Script{bulkParsed.length !== 1 ? 's' : ''}
+                </button>
+              </div>
+            </>
+          )}
+
+          {bulkStep === 'importing' && (
+            <div style={{ padding: '40px 20px', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink3)', letterSpacing: '.04em' }}>
+              Importing… {bulkProgress} / {bulkParsed.length}
+            </div>
+          )}
         </Modal>
       )}
 
@@ -422,6 +575,39 @@ function FormField({ label, children, span }: { label: string; children: React.R
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5, gridColumn: span ? `span ${span}` : undefined }}>
       <label className="login-label" style={{ margin: 0 }}>{label}</label>
       {children}
+    </div>
+  )
+}
+
+function InlineEdit({ value, fullValue, onChange }: { value: string; fullValue?: string; onChange: (v: string) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft]     = useState(fullValue ?? value)
+
+  const commit = () => {
+    onChange(draft)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        style={{ width: '100%', fontFamily: 'var(--mono)', fontSize: 11, padding: '3px 6px', background: 'var(--s1)', border: '1px solid var(--blue)', color: 'var(--ink)', outline: 'none', boxSizing: 'border-box' }}
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
+      />
+    )
+  }
+
+  return (
+    <div
+      onClick={() => { setDraft(fullValue ?? value); setEditing(true) }}
+      style={{ cursor: 'text', fontSize: 11, color: 'var(--ink)', padding: '3px 6px', minHeight: 22, borderRadius: 2, lineHeight: 1.5 }}
+      title="Click to edit"
+    >
+      {value || <span style={{ color: 'var(--ink4)', fontStyle: 'italic' }}>—</span>}
     </div>
   )
 }
