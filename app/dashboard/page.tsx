@@ -39,10 +39,7 @@ export default function Overview() {
           <span className="cb-icon">💬</span>
           <div><div className="cb-title">Slack</div><div className="cb-desc">Team chat</div></div>
         </a>
-        <a className="card-btn" href="https://kling.ai" target="_blank" rel="noreferrer">
-          <span className="cb-icon">🎬</span>
-          <div><div className="cb-title">Kling</div><div className="cb-desc">Video gen</div></div>
-        </a>
+
         <a className="card-btn" href="https://www.instagram.com/core.aivision" target="_blank" rel="noreferrer">
           <span className="cb-icon">📸</span>
           <div><div className="cb-title">Instagram</div><div className="cb-desc">@core.aivision</div></div>
