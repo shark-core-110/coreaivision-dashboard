@@ -77,14 +77,15 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  await svc.from('activity_log').insert({
+  // Fire-and-forget — log failure is non-fatal
+  void svc.from('activity_log').insert({
     entity_type:     'task',
     entity_id:       data.id,
     action:          'created',
     description:     `Task assigned to ${assigned_to ?? 'unassigned'}: "${title}"`,
     changed_by:      String(created_by ?? 'Shark'),
     changed_by_type: 'admin',
-  }).then(() => {}).catch(() => {})
+  })
 
   return NextResponse.json({ data }, { status: 201 })
 }
