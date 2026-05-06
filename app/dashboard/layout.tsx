@@ -25,6 +25,7 @@ const pageTitles: Record<string, string> = {
   '/dashboard/calendar':     'Content Calendar',
   '/dashboard/marketing':     'Marketing',
   '/dashboard/goals':        'Goals',
+  '/dashboard/assign-tasks': 'Assign Tasks',
   '/dashboard/my':           'My Dashboard',
   '/dashboard/onboarding':   'Welcome',
 }
