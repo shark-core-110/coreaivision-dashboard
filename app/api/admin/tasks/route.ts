@@ -4,6 +4,60 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { isAdminEmail } from '@/lib/admin'
 
+interface TaskNotifyParams {
+  title:      string
+  assignedTo: string
+  section:    string | null
+  priority:   string | null
+  dueDate:    string | null
+  createdBy:  string
+  notes:      string | null
+}
+
+async function notifySlack(p: TaskNotifyParams): Promise<void> {
+  const webhookUrl = process.env.SLACK_WEBHOOK_URL
+  if (!webhookUrl) return
+  try {
+    const due      = p.dueDate  ? ` · Due ${new Date(p.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''
+    const section  = p.section  ? ` · ${p.section}`  : ''
+    const priority = p.priority ? ` · ${p.priority}` : ''
+    const notes    = p.notes    ? `\n>${p.notes}`     : ''
+    const text     = `📋 *New task assigned to ${p.assignedTo}* by ${p.createdBy}\n>${p.title}${section}${priority}${due}${notes}`
+    await fetch(webhookUrl, {
+      method:  'POST',
+      headers: { 'content-type': 'application/json' },
+      body:    JSON.stringify({ text }),
+    })
+  } catch { /* non-fatal */ }
+}
+
+async function createNotionTask(p: TaskNotifyParams): Promise<void> {
+  const token = process.env.NOTION_TOKEN
+  const dbId  = process.env.NOTION_TASKS_DB_ID
+  if (!token || !dbId) return
+  try {
+    const notionTitle = `${p.assignedTo} — ${p.title}`
+    const properties: Record<string, unknown> = {
+      Task:   { title:  [{ text: { content: notionTitle } }] },
+      Status: { status: { name: 'Not started' } },
+    }
+    if (p.dueDate)  properties['Due']      = { date:      { start: p.dueDate } }
+    if (p.section)  properties['Type']     = { select:    { name: p.section  } }
+    if (p.priority) properties['Priority'] = { select:    { name: p.priority } }
+    if (p.notes)    properties['Notes']    = { rich_text: [{ text: { content: p.notes } }] }
+
+    await fetch('https://api.notion.com/v1/pages', {
+      method:  'POST',
+      headers: {
+        Authorization:    `Bearer ${token}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type':   'application/json',
+      },
+      body: JSON.stringify({ parent: { database_id: dbId }, properties }),
+    })
+  } catch { /* non-fatal */ }
+}
+
 async function requireAdmin() {
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -77,7 +131,7 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Fire-and-forget — log failure is non-fatal
+  // Fire-and-forget — none of these block the response
   void svc.from('activity_log').insert({
     entity_type:     'task',
     entity_id:       data.id,
@@ -86,6 +140,19 @@ export async function POST(request: Request) {
     changed_by:      String(created_by ?? 'Shark'),
     changed_by_type: 'admin',
   })
+
+  const notifyParams: TaskNotifyParams = {
+    title:      String(title).trim(),
+    assignedTo: String(assigned_to ?? 'Unassigned'),
+    section:    section    ? String(section)    : null,
+    priority:   priority   ? String(priority)   : null,
+    dueDate:    due_date   ? String(due_date)   : null,
+    notes:      notes      ? String(notes)      : null,
+    createdBy:  String(created_by ?? 'Shark'),
+  }
+
+  void notifySlack(notifyParams)
+  void createNotionTask(notifyParams)
 
   return NextResponse.json({ data }, { status: 201 })
 }
