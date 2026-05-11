@@ -17,6 +17,18 @@ interface Task {
   notion_url?: string
 }
 
+interface TaskRef {
+  id: string
+  task_id: string
+  label: string | null
+  ref_type: string
+  url: string | null
+  file_name: string | null
+  preview_title: string | null
+  preview_image: string | null
+  platform: string | null
+}
+
 interface CalItem {
   id: string
   title: string
@@ -137,6 +149,17 @@ function Dot({ color }: { color: string }) {
   )
 }
 
+function platformIcon(platform: string | null) {
+  if (!platform) return '🔗'
+  const p = platform.toLowerCase()
+  if (p === 'youtube')   return '▶'
+  if (p === 'tiktok')    return '♪'
+  if (p === 'instagram') return '◈'
+  if (p === 'figma')     return '◎'
+  if (p === 'notion')    return '◻'
+  return '🔗'
+}
+
 export default function MyDashboard() {
   const { user } = useCurrentUser()
   const [name, setName]         = useState('')
@@ -144,6 +167,8 @@ export default function MyDashboard() {
   const [cal, setCal]           = useState<CalItem[]>([])
   const [loading, setLoading]   = useState(true)
   const [lastSync, setLastSync] = useState('')
+  const [refsMap, setRefsMap]   = useState<Record<string, TaskRef[]>>({})
+  const [expandedRef, setExpandedRef] = useState<string | null>(null)
 
   const fetchData = useCallback(async (userName: string) => {
     const supabase = createClient()
@@ -165,10 +190,29 @@ export default function MyDashboard() {
     const supabaseTasks = ((tasksRes.data as Task[]) ?? []).map(t => ({ ...t, source: 'supabase' as const }))
     const notionTasks   = ((notionRes.tasks ?? []) as Task[]).map((t: Task) => ({ ...t, section: t.type ?? 'Notion', source: 'notion' as const }))
 
-    setTasks([...supabaseTasks, ...notionTasks])
+    const allTasks = [...supabaseTasks, ...notionTasks]
+    setTasks(allTasks)
     setCal((calRes.data as CalItem[]) ?? [])
     setLastSync(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
     setLoading(false)
+
+    // Fetch all references for Supabase tasks in one query
+    const sbIds = supabaseTasks.map(t => t.id).filter(Boolean)
+    if (sbIds.length > 0) {
+      const { data: refs } = await supabase
+        .from('task_references')
+        .select('id, task_id, label, ref_type, url, file_name, preview_title, preview_image, platform')
+        .in('task_id', sbIds)
+        .order('created_at', { ascending: true })
+      if (refs) {
+        const map: Record<string, TaskRef[]> = {}
+        for (const r of refs as TaskRef[]) {
+          if (!map[r.task_id]) map[r.task_id] = []
+          map[r.task_id].push(r)
+        }
+        setRefsMap(map)
+      }
+    }
   }, [])
 
   // Initial load
@@ -321,11 +365,16 @@ export default function MyDashboard() {
               <SectionLabel color={D.red}>⚠ Overdue</SectionLabel>
               <DarkCard danger>
                 {overdue.map((t, i) => (
-                  <DarkRow key={t.id} last={i === overdue.length - 1}>
-                    <Dot color={D.red} />
-                    <div style={{ flex: 1, fontSize: 13 }}>{t.title}</div>
-                    <span style={{ fontSize: 11, color: D.red, whiteSpace: 'nowrap' }}>{fmtDate(t.due_date)}</span>
-                  </DarkRow>
+                  <TaskRowWithRefs
+                    key={t.id}
+                    task={t}
+                    last={i === overdue.length - 1}
+                    dot={D.red}
+                    right={<span style={{ fontSize: 11, color: D.red, whiteSpace: 'nowrap' }}>{fmtDate(t.due_date)}</span>}
+                    refs={refsMap[t.id] ?? []}
+                    expanded={expandedRef === t.id}
+                    onToggle={() => setExpandedRef(prev => prev === t.id ? null : t.id)}
+                  />
                 ))}
               </DarkCard>
             </>
@@ -336,22 +385,16 @@ export default function MyDashboard() {
             {dueToday.length === 0
               ? <div style={{ padding: '12px 14px', fontSize: 13, color: D.sub }}>Nothing due today — you&apos;re clear.</div>
               : dueToday.map((t, i) => (
-                <DarkRow key={t.id} last={i === dueToday.length - 1}>
-                  <Dot color={D.amber} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 13 }}>{t.title}</span>
-                      {t.source === 'notion' && (
-                        <a href={t.notion_url} target="_blank" rel="noreferrer" style={{
-                          fontSize: 9, padding: '1px 5px', borderRadius: 4,
-                          background: 'rgba(255,255,255,.06)', color: D.sub,
-                          textDecoration: 'none', border: `0.5px solid ${D.dim}`,
-                        }}>N</a>
-                      )}
-                    </div>
-                  </div>
-                  <DarkBadge status={t.status} />
-                </DarkRow>
+                <TaskRowWithRefs
+                  key={t.id}
+                  task={t}
+                  last={i === dueToday.length - 1}
+                  dot={D.amber}
+                  right={<DarkBadge status={t.status} />}
+                  refs={refsMap[t.id] ?? []}
+                  expanded={expandedRef === t.id}
+                  onToggle={() => setExpandedRef(prev => prev === t.id ? null : t.id)}
+                />
               ))
             }
           </DarkCard>
@@ -361,28 +404,16 @@ export default function MyDashboard() {
             {upcoming.length === 0
               ? <div style={{ padding: '12px 14px', fontSize: 13, color: D.sub }}>No upcoming tasks.</div>
               : upcoming.map((t, i) => (
-                <DarkRow key={t.id} last={i === upcoming.length - 1}>
-                  <Dot color={D.dim} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 13 }}>{t.title}</span>
-                      {t.source === 'notion' && (
-                        <a href={t.notion_url} target="_blank" rel="noreferrer" style={{
-                          fontSize: 9, padding: '1px 5px', borderRadius: 4,
-                          background: 'rgba(255,255,255,.06)', color: D.sub,
-                          textDecoration: 'none', border: `0.5px solid ${D.dim}`,
-                        }}>N</a>
-                      )}
-                    </div>
-                    {(t.project_name || t.type) && (
-                      <div style={{ fontSize: 11, color: D.sub, marginTop: 2 }}>{t.project_name ?? t.type}</div>
-                    )}
-                    {t.notes && (
-                      <div style={{ fontSize: 11, color: D.dim, marginTop: 1 }}>{t.notes}</div>
-                    )}
-                  </div>
-                  <span style={{ fontSize: 11, color: D.dim, whiteSpace: 'nowrap' }}>{fmtDate(t.due_date)}</span>
-                </DarkRow>
+                <TaskRowWithRefs
+                  key={t.id}
+                  task={t}
+                  last={i === upcoming.length - 1}
+                  dot={D.dim}
+                  right={<span style={{ fontSize: 11, color: D.dim, whiteSpace: 'nowrap' }}>{fmtDate(t.due_date)}</span>}
+                  refs={refsMap[t.id] ?? []}
+                  expanded={expandedRef === t.id}
+                  onToggle={() => setExpandedRef(prev => prev === t.id ? null : t.id)}
+                />
               ))
             }
           </DarkCard>
@@ -431,6 +462,115 @@ export default function MyDashboard() {
       <div style={{ marginTop: 40, textAlign: 'center', fontSize: 11, color: D.dim }}>
         Core AI Vision · Personal Mode · All edits happen in the main dashboard
       </div>
+    </div>
+  )
+}
+
+// ── TaskRowWithRefs ──────────────────────────────────────────────────────────
+
+interface TaskRowWithRefsProps {
+  task: Task
+  last: boolean
+  dot: string
+  right: React.ReactNode
+  refs: TaskRef[]
+  expanded: boolean
+  onToggle: () => void
+}
+
+function TaskRowWithRefs({ task: t, last, dot, right, refs, expanded, onToggle }: TaskRowWithRefsProps) {
+  const hasRefs = refs.length > 0
+  return (
+    <div style={{ borderBottom: last && !expanded ? 'none' : `0.5px solid ${D.border}` }}>
+      <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <Dot color={dot} />
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 13 }}>{t.title}</span>
+            {t.source === 'notion' && (
+              <a href={t.notion_url} target="_blank" rel="noreferrer" style={{
+                fontSize: 9, padding: '1px 5px', borderRadius: 4,
+                background: 'rgba(255,255,255,.06)', color: D.sub,
+                textDecoration: 'none', border: `0.5px solid ${D.dim}`,
+              }}>N</a>
+            )}
+            {hasRefs && (
+              <button
+                onClick={onToggle}
+                style={{
+                  fontSize: 10, padding: '1px 7px', borderRadius: 10, cursor: 'pointer',
+                  background: expanded ? `${D.gold}18` : 'rgba(255,255,255,.04)',
+                  border: `0.5px solid ${expanded ? D.gold + '50' : D.dim}`,
+                  color: expanded ? D.goldDim : D.sub,
+                }}
+              >
+                📎 {refs.length}
+              </button>
+            )}
+          </div>
+          {(t.project_name || t.type) && (
+            <div style={{ fontSize: 11, color: D.sub, marginTop: 2 }}>{t.project_name ?? t.type}</div>
+          )}
+          {t.notes && (
+            <div style={{ fontSize: 11, color: D.dim, marginTop: 1 }}>{t.notes}</div>
+          )}
+        </div>
+        <div style={{ flexShrink: 0 }}>{right}</div>
+      </div>
+
+      {/* Inline refs panel */}
+      {expanded && hasRefs && (
+        <div style={{
+          padding: '8px 14px 10px 30px',
+          background: 'rgba(191,139,46,.03)',
+          borderTop: `0.5px solid ${D.border}`,
+          borderBottom: last ? 'none' : undefined,
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {refs.map(r => {
+              const href = r.url ?? undefined
+              const display = r.label || r.preview_title || r.file_name || href || '—'
+              return (
+                <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {r.preview_image ? (
+                    <img
+                      src={r.preview_image}
+                      alt=""
+                      style={{ width: 40, height: 26, objectFit: 'cover', borderRadius: 4, flexShrink: 0, border: `0.5px solid ${D.border}` }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: 14, flexShrink: 0, width: 20, textAlign: 'center' }}>
+                      {r.ref_type === 'file' ? '📁' : platformIcon(r.platform)}
+                    </span>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          fontSize: 12, color: D.goldDim, textDecoration: 'none',
+                          display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {display}
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: 12, color: D.text, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {display}
+                      </span>
+                    )}
+                    {r.platform && (
+                      <span style={{ fontSize: 10, color: D.sub, textTransform: 'capitalize' }}>{r.platform}</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
