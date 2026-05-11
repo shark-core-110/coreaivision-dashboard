@@ -538,6 +538,7 @@ export default function AssignTasksPage() {
                               value={exUrl}
                               onChange={e => setExUrl(e.target.value)}
                               placeholder="https://…"
+                              autoComplete="off"
                               style={miniInput}
                             />
                             <input
@@ -682,6 +683,7 @@ export default function AssignTasksPage() {
                         value={refUrl}
                         onChange={e => setRefUrl(e.target.value)}
                         placeholder="https://youtube.com/… or any URL"
+                        autoComplete="off"
                         style={miniInput}
                       />
                       <input
