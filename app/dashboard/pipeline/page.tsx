@@ -44,7 +44,7 @@ const STAGES: { key: ProdStatus; label: string; color: string; bg: string; borde
 
 const PLATFORMS: Platform[]     = ['Reel', 'YouTube Short', 'TikTok', 'Carousel', 'Long-form', 'Story']
 const CONTENT_TYPES: ContentType[] = ['Hook / Viral', 'Educational', 'Product Demo', 'Brand Story', 'Behind the Scenes', 'Trending Audio']
-const ASSIGNEES                 = ['Shark', 'Yash', 'Pushkar', 'Krishanu', 'Akib', 'Padmanav', 'Niraj', 'Sanjukta', 'Joyeeta', 'Smit', 'Team']
+const ASSIGNEES                 = ['Shark', 'Pushkar', 'Krishanu', 'Akib', 'Padmanav', 'Niraj', 'Sanjukta', 'Joyeeta', 'Smit', 'Team']
 
 const PLATFORM_COLOR: Record<Platform, string> = {
   'Reel':          '#BF8B2E',

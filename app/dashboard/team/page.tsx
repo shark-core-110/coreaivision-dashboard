@@ -1,7 +1,7 @@
 const members = [
   { initials: 'KR', name: 'Krishanu',  role: 'AI Visual Artist',           active: true },
   { initials: 'PK', name: 'Pushkar',   role: 'AI Video Creator',           active: true },
-  { initials: 'YA', name: 'Yash',      role: 'Strategy · Claude Ops',      active: true },
+
   { initials: 'AK', name: 'Akib',      role: 'In-House Editor',            active: true },
   { initials: 'PA', name: 'Padmanav',  role: 'Cinematic Editor',           active: true },
   { initials: 'NI', name: 'Niraj',     role: 'AI Vibe Coder',              active: true },
@@ -13,7 +13,6 @@ const members = [
 const tasks = [
   { initials: 'KR', name: 'Krishanu',  desc: 'Lyra visuals (Nano Banana Pro 2K) · Kling 4s videos · 5 daily · Lipsync' },
   { initials: 'PK', name: 'Pushkar',   desc: 'Seedance 2.0 videos (1/day) · Lyra visuals daily' },
-  { initials: 'YA', name: 'Yash',      desc: 'Instagram strategy in Claude · Skills folders · HeyGen talking videos' },
   { initials: 'AK', name: 'Akib',      desc: 'Brief video edits · Home folder structure for Core AI Vision' },
   { initials: 'PA', name: 'Padmanav',  desc: 'Cinematic video edits — remote' },
   { initials: 'NI', name: 'Niraj',     desc: 'AI Vibe Coding projects' },

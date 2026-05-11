@@ -6,7 +6,6 @@ import { useCurrentUser } from '@/hooks/useCurrentUser'
 const MEMBERS = [
   { name: 'Krishanu',  role: 'AI Visual Artist',        initials: 'KR' },
   { name: 'Pushkar',   role: 'AI Video Creator',         initials: 'PK' },
-  { name: 'Yash',      role: 'Strategy · Claude Ops',    initials: 'YA' },
   { name: 'Akib',      role: 'In-House Editor',          initials: 'AK' },
   { name: 'Padmanav',  role: 'Cinematic Editor',         initials: 'PA' },
   { name: 'Niraj',     role: 'AI Vibe Coder',            initials: 'NI' },
