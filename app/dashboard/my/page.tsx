@@ -529,20 +529,10 @@ function TaskRowWithRefs({ task: t, last, dot, right, refs, expanded, onToggle }
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {refs.map(r => {
               const href = r.url ?? undefined
-              const display = r.label || r.preview_title || r.file_name || href || '—'
+              const display = r.label || r.file_name || href || '—'
               return (
                 <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {r.preview_image ? (
-                    <img
-                      src={r.preview_image}
-                      alt=""
-                      style={{ width: 40, height: 26, objectFit: 'cover', borderRadius: 4, flexShrink: 0, border: `0.5px solid ${D.border}` }}
-                    />
-                  ) : (
-                    <span style={{ fontSize: 14, flexShrink: 0, width: 20, textAlign: 'center' }}>
-                      {r.ref_type === 'file' ? '📁' : platformIcon(r.platform)}
-                    </span>
-                  )}
+                  <span style={{ fontSize: 13, flexShrink: 0 }}>{r.ref_type === 'file' ? '📁' : '🔗'}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {href ? (
                       <a
@@ -560,9 +550,6 @@ function TaskRowWithRefs({ task: t, last, dot, right, refs, expanded, onToggle }
                       <span style={{ fontSize: 12, color: D.text, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {display}
                       </span>
-                    )}
-                    {r.platform && (
-                      <span style={{ fontSize: 10, color: D.sub, textTransform: 'capitalize' }}>{r.platform}</span>
                     )}
                   </div>
                 </div>

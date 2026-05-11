@@ -56,12 +56,6 @@ interface PendingRef {
   platform?: string
 }
 
-interface Preview {
-  title: string
-  thumbnail: string
-  platform: string
-}
-
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 11px', borderRadius: 7,
   border: '0.5px solid var(--b1)', background: 'var(--s2)',
@@ -130,8 +124,6 @@ export default function AssignTasksPage() {
   const [refUrl,       setRefUrl]       = useState('')
   const [refLabel,     setRefLabel]     = useState('')
   const [refFile,      setRefFile]      = useState<File | null>(null)
-  const [previewing,   setPreviewing]   = useState(false)
-  const [preview,      setPreview]      = useState<Preview | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Per-task inline ref panel
@@ -144,8 +136,6 @@ export default function AssignTasksPage() {
   const [exUrl,       setExUrl]       = useState('')
   const [exLabel,     setExLabel]     = useState('')
   const [exFile,      setExFile]      = useState<File | null>(null)
-  const [exPreviewing, setExPreviewing] = useState(false)
-  const [exPreview,   setExPreview]   = useState<Preview | null>(null)
   const [addingRef,   setAddingRef]   = useState(false)
   const exFileRef = useRef<HTMLInputElement>(null)
 
@@ -176,21 +166,6 @@ export default function AssignTasksPage() {
     return () => clearTimeout(t)
   }, [feedback])
 
-  // ── Fetch preview for a URL ──────────────────────────────────────────────
-  async function fetchPreview(url: string, forExisting = false) {
-    if (!url.trim()) return
-    forExisting ? setExPreviewing(true) : setPreviewing(true)
-    try {
-      const res = await fetch(`/api/admin/preview?url=${encodeURIComponent(url.trim())}`)
-      if (res.ok) {
-        const data = await res.json() as Preview
-        forExisting ? setExPreview(data) : setPreview(data)
-      }
-    } finally {
-      forExisting ? setExPreviewing(false) : setPreviewing(false)
-    }
-  }
-
   // ── Upload a file and return ref info ────────────────────────────────────
   async function uploadFile(file: File): Promise<Partial<PendingRef> | null> {
     const fd = new FormData()
@@ -213,15 +188,12 @@ export default function AssignTasksPage() {
     if (refTab === 'url') {
       if (!refUrl.trim()) return
       setPendingRefs(prev => [...prev, {
-        tempId:        crypto.randomUUID(),
-        label:         label ?? '',
-        ref_type:      'url',
-        url:           refUrl.trim(),
-        preview_title: preview?.title,
-        preview_image: preview?.thumbnail,
-        platform:      preview?.platform,
+        tempId:   crypto.randomUUID(),
+        label:    label ?? '',
+        ref_type: 'url',
+        url:      refUrl.trim(),
       }])
-      setRefUrl(''); setRefLabel(''); setPreview(null)
+      setRefUrl(''); setRefLabel('')
     } else {
       if (!refFile) return
       const info = await uploadFile(refFile)
@@ -269,7 +241,7 @@ export default function AssignTasksPage() {
       return
     }
     setExpandedId(taskId)
-    setExTab('url'); setExUrl(''); setExLabel(''); setExFile(null); setExPreview(null)
+    setExTab('url'); setExUrl(''); setExLabel(''); setExFile(null)
     if (taskRefs[taskId]) return
     setRefsLoading(true)
     try {
@@ -293,9 +265,9 @@ export default function AssignTasksPage() {
           label:         exLabel.trim() || null,
           ref_type:      'url',
           url:           exUrl.trim(),
-          preview_title: exPreview?.title ?? null,
-          preview_image: exPreview?.thumbnail ?? null,
-          platform:      exPreview?.platform ?? null,
+          preview_title: null,
+          preview_image: null,
+          platform:      null,
           file_path: null, file_name: null, file_mime: null,
         }
       } else {
@@ -320,7 +292,7 @@ export default function AssignTasksPage() {
       if (res.ok) {
         const json = await res.json() as { data: TaskRef }
         setTaskRefs(prev => ({ ...prev, [taskId]: [...(prev[taskId] ?? []), json.data] }))
-        setExUrl(''); setExLabel(''); setExFile(null); setExPreview(null)
+        setExUrl(''); setExLabel(''); setExFile(null)
         if (exFileRef.current) exFileRef.current.value = ''
       }
     } finally {
@@ -365,7 +337,7 @@ export default function AssignTasksPage() {
       }
       setFeedback({ ok: true, msg: `Task assigned to ${activeMember}` })
       setTitle(''); setSection(''); setDueDate(''); setNotes(''); setPriority('Medium')
-      setPendingRefs([]); setRefUrl(''); setRefLabel(''); setPreview(null)
+      setPendingRefs([]); setRefUrl(''); setRefLabel('')
       await fetchTasks(activeMember)
     } finally {
       setSubmitting(false)
@@ -562,30 +534,16 @@ export default function AssignTasksPage() {
 
                         {exTab === 'url' ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                              <input
-                                value={exUrl}
-                                onChange={e => { setExUrl(e.target.value); setExPreview(null) }}
-                                placeholder="https://…"
-                                style={{ ...miniInput, flex: 1 }}
-                              />
-                              <button
-                                onClick={() => fetchPreview(exUrl, true)}
-                                disabled={exPreviewing || !exUrl.trim()}
-                                style={{
-                                  padding: '5px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap',
-                                  border: '0.5px solid var(--b1)', background: 'var(--s2)', color: 'var(--ink3)',
-                                  opacity: exPreviewing || !exUrl.trim() ? 0.4 : 1,
-                                }}
-                              >
-                                {exPreviewing ? '…' : 'Preview'}
-                              </button>
-                            </div>
-                            {exPreview && <PreviewChip preview={exPreview} />}
+                            <input
+                              value={exUrl}
+                              onChange={e => setExUrl(e.target.value)}
+                              placeholder="https://…"
+                              style={miniInput}
+                            />
                             <input
                               value={exLabel}
                               onChange={e => setExLabel(e.target.value)}
-                              placeholder="Label (optional)"
+                              placeholder="Label (optional — shown instead of URL)"
                               style={miniInput}
                             />
                           </div>
@@ -720,31 +678,16 @@ export default function AssignTasksPage() {
 
                   {refTab === 'url' ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <input
-                          value={refUrl}
-                          onChange={e => { setRefUrl(e.target.value); setPreview(null) }}
-                          placeholder="https://youtube.com/… or any URL"
-                          style={{ ...miniInput, flex: 1 }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => fetchPreview(refUrl)}
-                          disabled={previewing || !refUrl.trim()}
-                          style={{
-                            padding: '5px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap',
-                            border: '0.5px solid var(--b1)', background: 'var(--s2)', color: 'var(--ink3)',
-                            opacity: previewing || !refUrl.trim() ? 0.4 : 1,
-                          }}
-                        >
-                          {previewing ? '…' : 'Preview'}
-                        </button>
-                      </div>
-                      {preview && <PreviewChip preview={preview} />}
+                      <input
+                        value={refUrl}
+                        onChange={e => setRefUrl(e.target.value)}
+                        placeholder="https://youtube.com/… or any URL"
+                        style={miniInput}
+                      />
                       <input
                         value={refLabel}
                         onChange={e => setRefLabel(e.target.value)}
-                        placeholder="Label (optional, e.g. Reference reel)"
+                        placeholder="Label (optional — shown instead of URL)"
                         style={miniInput}
                       />
                     </div>
@@ -792,17 +735,21 @@ export default function AssignTasksPage() {
                             background: 'rgba(255,255,255,.03)', border: '0.5px solid var(--b1)',
                           }}
                         >
-                          {r.preview_image ? (
-                            <img src={r.preview_image} alt="" style={{ width: 32, height: 32, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }} />
-                          ) : (
-                            <span style={{ fontSize: 16, flexShrink: 0 }}>{r.ref_type === 'file' ? '📁' : platformIcon(r.platform ?? null)}</span>
-                          )}
+                          <span style={{ fontSize: 14, flexShrink: 0 }}>{r.ref_type === 'file' ? '📁' : '🔗'}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 12, color: 'var(--ink1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {r.label || r.preview_title || r.file_name || r.url}
-                            </div>
-                            {r.platform && (
-                              <div style={{ fontSize: 10, color: 'var(--ink4)', textTransform: 'capitalize' }}>{r.platform}</div>
+                            {r.url ? (
+                              <a
+                                href={r.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{ fontSize: 12, color: 'var(--blue)', textDecoration: 'none', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                              >
+                                {r.label || r.file_name || r.url}
+                              </a>
+                            ) : (
+                              <div style={{ fontSize: 12, color: 'var(--ink1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {r.label || r.file_name || '—'}
+                              </div>
                             )}
                           </div>
                           <button
@@ -856,43 +803,16 @@ export default function AssignTasksPage() {
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
-function PreviewChip({ preview }: { preview: Preview }) {
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 8,
-      padding: '6px 8px', borderRadius: 6,
-      background: 'rgba(255,255,255,.03)', border: '0.5px solid var(--b1)',
-    }}>
-      {preview.thumbnail ? (
-        <img src={preview.thumbnail} alt="" style={{ width: 40, height: 28, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
-      ) : (
-        <span style={{ fontSize: 18, flexShrink: 0 }}>{platformIcon(preview.platform)}</span>
-      )}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12, color: 'var(--ink1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {preview.title || 'No title'}
-        </div>
-        {preview.platform && (
-          <div style={{ fontSize: 10, color: 'var(--ink4)', textTransform: 'capitalize', marginTop: 1 }}>{preview.platform}</div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function RefRow({ ref_, onDelete }: { ref_: TaskRef; onDelete: () => void }) {
-  const href = ref_.url ?? (ref_.file_path ? ref_.file_path : undefined)
+  const href = ref_.url ?? ref_.file_path ?? undefined
+  const display = ref_.label || ref_.file_name || href || '—'
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 8,
       padding: '6px 8px', borderRadius: 6,
       background: 'rgba(255,255,255,.02)', border: '0.5px solid var(--b1)',
     }}>
-      {ref_.preview_image ? (
-        <img src={ref_.preview_image} alt="" style={{ width: 36, height: 24, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
-      ) : (
-        <span style={{ fontSize: 15, flexShrink: 0 }}>{ref_.ref_type === 'file' ? '📁' : platformIcon(ref_.platform)}</span>
-      )}
+      <span style={{ fontSize: 14, flexShrink: 0 }}>{ref_.ref_type === 'file' ? '📁' : '🔗'}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         {href ? (
           <a
@@ -901,15 +821,12 @@ function RefRow({ ref_, onDelete }: { ref_: TaskRef; onDelete: () => void }) {
             rel="noreferrer"
             style={{ fontSize: 12, color: 'var(--blue)', textDecoration: 'none', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
           >
-            {ref_.label || ref_.preview_title || ref_.file_name || href}
+            {display}
           </a>
         ) : (
           <div style={{ fontSize: 12, color: 'var(--ink1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {ref_.label || ref_.preview_title || ref_.file_name || '—'}
+            {display}
           </div>
-        )}
-        {ref_.platform && (
-          <div style={{ fontSize: 10, color: 'var(--ink4)', textTransform: 'capitalize', marginTop: 1 }}>{ref_.platform}</div>
         )}
       </div>
       <button
