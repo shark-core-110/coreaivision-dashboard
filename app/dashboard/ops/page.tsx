@@ -1,98 +1,120 @@
-const team = [
-  { initials: 'PK', name: 'Pushkar',   role: 'AI Video Creator — Seedance, Lyra visuals',            badge: 'b-active',   label: 'Active' },
-  { initials: 'KR', name: 'Krishanu',  role: 'AI Visual Artist — Nano Banana, Kling',                badge: 'b-active',   label: 'Active' },
-  { initials: 'AK', name: 'Akib',      role: 'In-House Video Editor — briefs, folder structure',     badge: 'b-active',   label: 'Active' },
-  { initials: 'PA', name: 'Padmanav',  role: 'Cinematic Video Editor — remote',                      badge: 'b-active',   label: 'Active' },
-  { initials: 'NI', name: 'Niraj',     role: 'AI Vibe Coder',                                        badge: 'b-active',   label: 'Active' },
-  { initials: 'SJ', name: 'Sanjukta',  role: 'AI Influencer Visuals & Marketing — Lyra Page',        badge: 'b-active',   label: 'Active' },
-  { initials: 'JO', name: 'Joyeeta',   role: 'LinkedIn Strategist — Independent Contractor',         badge: 'b-blue',     label: 'Contractor' },
-  { initials: 'SM', name: 'Smit',      role: 'AI Creator — Inactive until June',                     badge: 'b-inactive', label: 'Inactive', dim: true },
+// SVG ring circumference for r=24: 2π×24 ≈ 150.8
+const CIRC = 150.8
+
+function ringOffset(pct: number) {
+  return CIRC - (pct / 100) * CIRC
+}
+
+function ringClass(pct: number, contractor: boolean, inactive: boolean) {
+  if (inactive)   return 'ring-inactive'
+  if (contractor) return 'ring-contractor'
+  if (pct >= 100) return 'ring-full'
+  return 'ring-active'
+}
+
+function CapDots({ pct, full }: { pct: number; full: boolean }) {
+  return (
+    <div className="capacity-dots">
+      {[20, 40, 60, 80, 100].map((threshold) => {
+        const filled = pct >= threshold
+        const cls = filled
+          ? full ? 'cap-dot cap-fill-full' : 'cap-dot cap-fill'
+          : 'cap-dot'
+        return <div key={threshold} className={cls} />
+      })}
+    </div>
+  )
+}
+
+const members = [
+  { init: 'KR', name: 'Krishanu',  short: 'AI Creator',    pct: 80,  contractor: false, inactive: false, chips: ['Kling', 'Lipsync'] },
+  { init: 'PK', name: 'Pushkar',   short: 'AI Creator',    pct: 80,  contractor: false, inactive: false, chips: ['Seedance', 'Lyra'] },
+  { init: 'AK', name: 'Akib',      short: 'Video Editor',  pct: 100, contractor: false, inactive: false, chips: ['Briefs', 'Folders'] },
+  { init: 'PA', name: 'Padmanav',  short: 'Editor Remote', pct: 100, contractor: false, inactive: false, chips: ['Cinematic'] },
+  { init: 'NI', name: 'Niraj',     short: 'AI Coder',      pct: 100, contractor: false, inactive: false, chips: ['Vibe Code'] },
+  { init: 'SJ', name: 'Sanjukta',  short: 'Marketing',     pct: 100, contractor: false, inactive: false, chips: ['Lyra Page'] },
+  { init: 'JO', name: 'Joyeeta',   short: 'LinkedIn',      pct: 100, contractor: true,  inactive: false, chips: ['Strategy'] },
+  { init: 'SM', name: 'Smit',      short: '← June',        pct: 0,   contractor: false, inactive: true,  chips: [] },
 ]
 
-const tasks = [
-  { initials: 'KR', name: 'Krishanu',  desc: 'Lyra visuals (Nano Banana Pro 2K) · Kling 4s videos · 5 daily · Lipsync' },
-  { initials: 'PK', name: 'Pushkar',   desc: 'Seedance 2.0 videos (1/day) · Lyra visuals daily' },
-  { initials: 'AK', name: 'Akib',      desc: 'Brief video edits · Home folder structure for Core AI Vision' },
-  { initials: 'PA', name: 'Padmanav',  desc: 'Cinematic video edits — remote' },
-  { initials: 'NI', name: 'Niraj',     desc: 'AI Vibe Coding projects' },
-  { initials: 'SJ', name: 'Sanjukta',  desc: 'AI influencer visuals & marketing — Lyra Page' },
-  { initials: 'JO', name: 'Joyeeta',   desc: 'LinkedIn strategy & content — contractor' },
+const capacitySummary = [
+  { label: 'AI Creators',    pct: 80  },
+  { label: 'Video Editors',  pct: 100 },
+  { label: 'Marketing',      pct: 100 },
+  { label: 'Strategy & Ops', pct: 100 },
 ]
 
 export default function Ops() {
   return (
     <>
-      <div style={{
-        background: 'rgba(26,112,173,.06)', border: '0.5px solid rgba(26,112,173,.2)',
-        borderRadius: 8, padding: '10px 16px', marginBottom: 20,
-        fontSize: 12, color: 'var(--ink3)', lineHeight: 1.6,
-      }}>
-        <strong style={{ color: 'var(--blue)' }}>Team &amp; Ops</strong>
-        &nbsp;&middot;&nbsp; Full roster with roles and active status
-        &nbsp;&middot;&nbsp; Capacity bars show workstream load
-        &nbsp;&middot;&nbsp; Update who&apos;s blocked or maxed so the team can rebalance
-      </div>
-      <div className="focus-block">
-        <div className="focus-label">Operations Status</div>
-        <div className="focus-text">8 members across AI creation, video editing, strategy, and LinkedIn. Smit inactive until June. SOPs being formalised to reduce founder bottleneck.</div>
-      </div>
-
-      <div className="grid3">
-        <div className="metric"><div className="metric-label">Team Size</div><div className="metric-val">8</div><div className="metric-sub">active + Smit returns June</div></div>
-        <div className="metric"><div className="metric-label">Active Workstreams</div><div className="metric-val">5</div><div className="metric-sub">Running in parallel</div></div>
-        <div className="metric metric-gold"><div className="metric-label">Open Roles</div><div className="metric-val">1</div><div className="metric-sub">Content Creator / Editor</div></div>
+      {/* ── Headline stats ── */}
+      <div className="hero-stat-row" style={{ marginBottom: 20 }}>
+        <div className="hero-stat-block">
+          <div className="hero-num">8</div>
+          <div className="hero-label">Team Members</div>
+          <div className="hero-trend">Smit returns June</div>
+        </div>
+        <div className="hero-stat-block">
+          <div className="hero-num">5</div>
+          <div className="hero-label">Workstreams</div>
+          <div className="hero-trend">Running in parallel</div>
+        </div>
+        <div className="hero-stat-block">
+          <div className="hero-num">1</div>
+          <div className="hero-label">Open Role</div>
+          <div className="hero-trend">Creator / Editor</div>
+        </div>
       </div>
 
-      <div className="sec">Team</div>
-      <div className="team-grid">
-        {team.map((m) => (
-          <a
-            key={m.name}
-            className="team-card"
-            href="https://www.notion.so/34a7fe3e7f3d81f996b0cde17f7bbd35"
-            target="_blank"
-            rel="noreferrer"
-            style={m.dim ? { opacity: 0.4, pointerEvents: 'none' } : {}}
-          >
-            <div className={`tc-status ${m.badge === 'b-inactive' ? 'inactive' : ''}`} style={m.badge === 'b-blue' ? { background: 'var(--blue)' } : {}} />
-            <div className="tc-avatar" style={m.badge === 'b-blue' ? { color: 'var(--blue)' } : {}}>{m.initials}</div>
-            <div className="tc-name" style={m.dim ? { color: 'var(--ink3)' } : {}}>{m.name}</div>
-            <div className="tc-role">{m.role.split(' — ')[0]}</div>
-          </a>
-        ))}
-      </div>
-
-      <div className="div" />
-
-      <div className="sec">Team Capacity</div>
-      <div className="card">
-        {[
-          { label: 'AI Creators (Krishanu, Pushkar)',           detail: '2 active', pct: 80,  cls: 'prog-gold'  },
-          { label: 'Video Editors (Akib, Padmanav)',            detail: '2 active', pct: 100, cls: 'prog-blue'  },
-          { label: 'Marketing & LinkedIn (Sanjukta, Joyeeta)', detail: '2 active', pct: 100, cls: 'prog-blue'  },
-          { label: 'Strategy & Ops (Niraj)',                    detail: '1 active', pct: 100, cls: 'prog-green' },
-        ].map((row) => (
-          <div key={row.label} style={{ marginBottom: 12 }}>
-            <div className="prog-row"><span>{row.label}</span><span>{row.detail}</span></div>
-            <div className="prog-track"><div className={`prog-fill ${row.cls}`} style={{ width: `${row.pct}%` }} /></div>
-          </div>
-        ))}
-      </div>
-
-      <div className="sec">Current Assignments</div>
-      <div className="card">
-        {tasks.map((m) => (
-          <div className="row" key={m.name}>
-            <div className="row-left">
-              <div className="avatar">{m.initials}</div>
-              <div>
-                <div className="row-name">{m.name}</div>
-                <div className="row-role">{m.desc}</div>
+      {/* ── Member cards with SVG rings ── */}
+      <div className="sec" style={{ marginTop: 0, marginBottom: 8 }}>Team</div>
+      <div className="member-card-grid">
+        {members.map((m) => {
+          const rc = ringClass(m.pct, m.contractor, m.inactive)
+          return (
+            <div key={m.init} className={`member-card${m.inactive ? ' dim-card' : ''}`}>
+              <div className="member-ring-wrap">
+                <svg className="member-ring-svg" viewBox="0 0 56 56">
+                  <circle className="member-ring-bg" cx="28" cy="28" r="24" />
+                  <circle
+                    className={`member-ring-fill ${rc}`}
+                    cx="28" cy="28" r="24"
+                    strokeDasharray={`${CIRC} ${CIRC}`}
+                    strokeDashoffset={ringOffset(m.pct)}
+                  />
+                </svg>
+                <div className="member-avatar">{m.init}</div>
               </div>
+              <div className="member-name">{m.name}</div>
+              <div className="member-role-short">{m.short}</div>
+              <CapDots pct={m.pct} full={m.pct >= 100 && !m.contractor} />
+              {m.chips.map((c) => (
+                <div key={c} className="task-chip">{c}</div>
+              ))}
             </div>
-            <span className="badge b-active">Active</span>
+          )
+        })}
+      </div>
+
+      {/* ── Capacity summary ── */}
+      <div className="sec" style={{ marginBottom: 8 }}>Capacity</div>
+      <div className="capacity-summary-strip">
+        {capacitySummary.map((row) => (
+          <div key={row.label} className="cap-summary-cell">
+            <div className="cap-summary-label">{row.label}</div>
+            <div className={`cap-summary-pct${row.pct >= 100 ? ' pct-full' : ''}`}>{row.pct}%</div>
+            <CapDots pct={row.pct} full={row.pct >= 100} />
           </div>
         ))}
+      </div>
+
+      {/* ── Focus note ── */}
+      <div className="focus-block">
+        <div className="focus-label">Operations Note</div>
+        <div className="focus-text">
+          All active members at or near full capacity. SOPs being formalised to reduce founder bottleneck.
+          1 open role for Content Creator / Editor.
+        </div>
       </div>
     </>
   )

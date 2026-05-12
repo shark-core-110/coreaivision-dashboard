@@ -1,38 +1,112 @@
+'use client'
+
+import { useState } from 'react'
+
+// SVG ring circumference for r=52: 2π×52 ≈ 326.7
+const CIRC_IG = 326.7
+
+const contentMix = [
+  { dot: 'mix-dot-prog',   name: 'AI tutorials — TimKoda / Wavy Boy style', status: 'Building'    },
+  { dot: 'mix-dot-prog',   name: 'Lyra AI avatar content',                   status: 'In Progress' },
+  { dot: 'mix-dot-active', name: 'Platform promos (clients)',                 status: 'Active'      },
+  { dot: 'mix-dot-todo',   name: 'Micro drama series — 1-min episodes',      status: 'Starting'    },
+  { dot: 'mix-dot-todo',   name: 'Behind the scenes — workflow & team',      status: 'To Do'       },
+]
+
+const criticalGaps = [
+  { dot: 'bn-crit', text: 'No consistent daily posting schedule'       },
+  { dot: 'bn-crit', text: 'No SOP for AI tutorial production pipeline' },
+  { dot: 'bn-med',  text: 'Frequency needs to reach daily to hit 50K'  },
+]
+
+const pct    = 37.8
+const offset = CIRC_IG - (pct / 100) * CIRC_IG
+
 export default function Instagram() {
+  const [gapsOpen, setGapsOpen] = useState(false)
+  const critCount = criticalGaps.filter(g => g.dot === 'bn-crit').length
+
   return (
     <>
-      <div className="ig-stats">
-        <div className="ig-stat"><div className="ig-stat-val" style={{ color: 'var(--gold)' }}>18.9K</div><div className="ig-stat-label">Followers</div></div>
-        <div className="ig-stat"><div className="ig-stat-val">75</div><div className="ig-stat-label">Total Posts</div></div>
-        <div className="ig-stat"><div className="ig-stat-val" style={{ color: 'var(--amber)' }}>1–2x</div><div className="ig-stat-label">Posts / Week</div></div>
-        <div className="ig-stat"><div className="ig-stat-val" style={{ color: 'var(--green)' }}>50K</div><div className="ig-stat-label">3-Month Target</div></div>
-      </div>
-      <div className="card">
-        <div className="card-title">Progress to 50K — 37.8% there</div>
-        <div className="prog-wrap">
-          <div className="prog-row"><span>18.9K current</span><span style={{ color: 'var(--gold)' }}>37.8%</span><span>50K target</span></div>
-          <div className="prog-track"><div className="prog-fill prog-gold" style={{ width: '37.8%' }} /></div>
-        </div>
-        <div style={{ marginTop: 10, fontSize: 12, color: 'var(--ink3)' }}>Need +1,033/week to hit 50K in 12 weeks · Currently growing ~200–400/week</div>
-      </div>
-      <div className="grid2">
+      {/* ── Hero: big follower count + progress ring ── */}
+      <div className="ig-hero-layout">
         <div>
-          <div className="sec">Content Mix Status</div>
-          <div className="card">
-            <div className="task"><div className="tdot tdot-prog" /><div className="tname">AI tutorials — TimKoda / Wavy Boy style</div><span className="tbadge tb-prog">Building</span></div>
-            <div className="task"><div className="tdot tdot-prog" /><div className="tname">Lyra AI avatar content</div><span className="tbadge tb-prog">In Progress</span></div>
-            <div className="task"><div className="tdot tdot-done" /><div className="tname">Platform promotions (clients)</div><span className="tbadge tb-done">Active</span></div>
-            <div className="task"><div className="tdot tdot-todo" /><div className="tname">Micro drama series — 1-min episodes</div><span className="tbadge tb-todo">Starting</span></div>
-            <div className="task"><div className="tdot tdot-todo" /><div className="tname">Behind the scenes — workflow & team</div><span className="tbadge tb-todo">To Do</span></div>
+          <div className="ig-big-num">18.9K</div>
+          <div className="ig-big-label">Followers</div>
+          <div className="ig-big-sub">@core.aivision · 50K goal</div>
+          <div style={{ marginTop: 14, fontSize: 12, color: 'var(--ink3)', fontFamily: 'var(--hnd)' }}>
+            Need <strong style={{ color: 'var(--ink2)' }}>+1,033/week</strong> to hit 50K in 12 weeks
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--ink4)', fontFamily: 'var(--hnd)', marginTop: 3 }}>
+            Currently growing ~200–400/week
           </div>
         </div>
-        <div>
-          <div className="sec">Critical Gaps</div>
-          <div className="card">
-            <div className="bn-row"><div className="bn-dot bn-crit" /><div className="bn-text">No consistent daily posting schedule</div></div>
-            <div className="bn-row"><div className="bn-dot bn-crit" /><div className="bn-text">No SOP for AI tutorial production pipeline</div></div>
-            <div className="bn-row"><div className="bn-dot bn-med" /><div className="bn-text">Frequency needs to reach daily to hit 50K</div></div>
+        <div className="ig-ring-block">
+          <svg className="ig-ring-svg" viewBox="0 0 120 120">
+            <circle className="ig-ring-bg"   cx="60" cy="60" r="52" />
+            <circle
+              className="ig-ring-fill"
+              cx="60" cy="60" r="52"
+              strokeDasharray={`${CIRC_IG} ${CIRC_IG}`}
+              strokeDashoffset={offset}
+            />
+          </svg>
+          <div className="ig-ring-center">
+            <div className="ig-ring-pct">{pct}%</div>
+            <div className="ig-ring-sub">to 50K</div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Content mix pills ── */}
+      <div className="sec" style={{ marginTop: 0, marginBottom: 8 }}>Content Mix</div>
+      <div className="mix-pills-row">
+        {contentMix.map((item) => (
+          <div key={item.name} className="mix-pill">
+            <div className={`mix-dot ${item.dot}`} />
+            <div className="mix-pill-name">{item.name}</div>
+            <div className="mix-pill-badge">{item.status}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Collapse: Critical Gaps ── */}
+      <button
+        className="collapse-chip collapse-chip-crit"
+        onClick={() => setGapsOpen(o => !o)}
+      >
+        <span className="collapse-chip-count">{critCount}</span>
+        <span>Critical Gaps</span>
+        <span className={`collapse-chip-arrow${gapsOpen ? ' open' : ''}`}>▼</span>
+      </button>
+      {gapsOpen && (
+        <div className="collapse-body">
+          {criticalGaps.map((g, i) => (
+            <div key={i} className="bn-row">
+              <div className={`bn-dot ${g.dot}`} />
+              <div className="bn-text">{g.text}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Stats strip ── */}
+      <div className="sec" style={{ marginTop: 20, marginBottom: 8 }}>Stats</div>
+      <div className="hero-stat-row">
+        <div className="hero-stat-block">
+          <div className="hero-num">75</div>
+          <div className="hero-label">Total Posts</div>
+          <div className="hero-trend">Reels + Carousels</div>
+        </div>
+        <div className="hero-stat-block">
+          <div className="hero-num">1–2x</div>
+          <div className="hero-label">Per Week</div>
+          <div className="hero-trend hero-trend-warn">Needs daily to hit 50K</div>
+        </div>
+        <div className="hero-stat-block">
+          <div className="hero-num">50K</div>
+          <div className="hero-label">3-Month Target</div>
+          <div className="hero-trend">12 weeks from now</div>
         </div>
       </div>
     </>
