@@ -83,6 +83,9 @@ export default function PipelinePage() {
   const [saving, setSaving]           = useState(false)
   const [detail, setDetail]           = useState<PipelineItem | null>(null)
   const [editingNote, setEditingNote] = useState('')
+  const [captionOptions, setCaptionOptions] = useState<{ label: string; caption: string; hashtags: string }[]>([])
+  const [captionLoading, setCaptionLoading] = useState(false)
+  const [captionError,   setCaptionError]   = useState<string | null>(null)
 
   const loadItems = useCallback(async () => {
     const sb = createClient()
@@ -175,6 +178,35 @@ export default function PipelinePage() {
     setSaving(false)
     setShowAdd(false)
     setForm({ ...EMPTY_FORM })
+  }
+
+  async function generateCaption(item: PipelineItem) {
+    setCaptionOptions([])
+    setCaptionError(null)
+    setCaptionLoading(true)
+    try {
+      const res = await fetch('/api/ai/caption', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          title:        item.title,
+          platform:     item.platform,
+          content_type: item.content_type,
+          notes:        item.notes ?? null,
+          client:       item.client ?? null,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json() as { error?: string }
+        throw new Error(data.error ?? `HTTP ${res.status}`)
+      }
+      const data = await res.json() as { options: { label: string; caption: string; hashtags: string }[] }
+      setCaptionOptions(data.options ?? [])
+    } catch (err) {
+      setCaptionError(err instanceof Error ? err.message : 'Caption generation failed')
+    } finally {
+      setCaptionLoading(false)
+    }
   }
 
   async function saveNote() {
@@ -274,7 +306,7 @@ export default function PipelinePage() {
                       draggable
                       onDragStart={() => onDragStart(item)}
                       onDragEnd={() => setDragging(null)}
-                      onClick={() => { setDetail(item); setEditingNote(item.notes ?? '') }}
+                      onClick={() => { setDetail(item); setEditingNote(item.notes ?? ''); setCaptionOptions([]); setCaptionError(null) }}
                       style={{ background: 'var(--s1)', border: '0.5px solid var(--b1)', padding: '10px 11px', marginBottom: 6, cursor: 'grab', userSelect: 'none', opacity: dragging?.id === item.id ? 0.35 : 1, transition: 'opacity .12s, box-shadow .15s', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
                       onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.09)')}
                       onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)')}
@@ -455,6 +487,36 @@ export default function PipelinePage() {
               <div style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 500, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink4)', marginBottom: 8 }}>Notes</div>
               <textarea value={editingNote} onChange={e => setEditingNote(e.target.value)} rows={4} style={{ width: '100%', resize: 'vertical' }} placeholder="Add notes…" />
               <button onClick={saveNote} style={{ marginTop: 6, padding: '7px 16px', background: 'var(--gold-glow)', border: '0.5px solid var(--gold-line)', color: 'var(--gold)', fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 500, letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}>Save Note</button>
+            </div>
+
+            {/* Caption writer */}
+            <div style={{ marginBottom: 22 }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 500, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink4)', marginBottom: 8 }}>Caption Writer</div>
+              <button
+                onClick={() => generateCaption(detail)}
+                disabled={captionLoading}
+                style={{ padding: '7px 16px', background: 'rgba(191,90,242,.07)', border: '0.5px solid rgba(191,90,242,.25)', color: '#BF5AF2', fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 500, letterSpacing: '.06em', textTransform: 'uppercase', cursor: captionLoading ? 'not-allowed' : 'pointer', opacity: captionLoading ? .5 : 1 }}
+              >
+                {captionLoading ? 'Generating…' : '✦ Generate Captions'}
+              </button>
+              {captionError && (
+                <div style={{ marginTop: 8, fontSize: 11, color: '#ef4444' }}>{captionError}</div>
+              )}
+              {captionOptions.length > 0 && (
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {captionOptions.map((opt, i) => (
+                    <div key={i} style={{ background: 'var(--s2)', border: '0.5px solid var(--b2)', padding: '10px 12px' }}>
+                      <div style={{ fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: '#BF5AF2', marginBottom: 6 }}>{opt.label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ink)', lineHeight: 1.55, marginBottom: 6, whiteSpace: 'pre-wrap' }}>{opt.caption}</div>
+                      <div style={{ fontSize: 11, color: 'var(--ink4)', fontStyle: 'italic' }}>{opt.hashtags}</div>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(`${opt.caption}\n\n${opt.hashtags}`)}
+                        style={{ marginTop: 7, padding: '4px 10px', background: 'transparent', border: '0.5px solid var(--b2)', color: 'var(--ink3)', fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+                      >Copy</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* move */}

@@ -51,6 +51,8 @@ export default function UpdatesPage() {
   const [posting, setPosting]       = useState(false)
   const [filter, setFilter]         = useState<FilterOption>('all')
   const [tab, setTab]               = useState<'updates' | 'activity'>('updates')
+  const [generatingRetro, setGeneratingRetro] = useState(false)
+  const [retroError,      setRetroError]      = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     const supabase = createClient()
@@ -64,6 +66,23 @@ export default function UpdatesPage() {
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  const generateRetro = async () => {
+    setGeneratingRetro(true)
+    setRetroError(null)
+    try {
+      const res = await fetch('/api/ai/weekly-retro', { method: 'POST' })
+      if (!res.ok) {
+        const data = await res.json() as { error?: string }
+        throw new Error(data.error ?? `HTTP ${res.status}`)
+      }
+      await fetchData()
+    } catch (err) {
+      setRetroError(err instanceof Error ? err.message : 'Failed to generate retro')
+    } finally {
+      setGeneratingRetro(false)
+    }
+  }
 
   const postUpdate = async () => {
     if (!content.trim()) return
@@ -132,14 +151,31 @@ export default function UpdatesPage() {
               </button>
             ))}
           </div>
-          <button
-            className="top-btn"
-            onClick={postUpdate}
-            disabled={posting || !content.trim()}
-            style={{ marginLeft: 'auto' }}
-          >
-            {posting ? 'Posting…' : 'Post Update'}
-          </button>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+            {retroError && (
+              <span style={{ fontSize: 11, color: '#ef4444' }}>{retroError}</span>
+            )}
+            <button
+              className="top-btn"
+              onClick={generateRetro}
+              disabled={generatingRetro}
+              title="Generate a weekly retro from the last 7 days of updates and activity"
+              style={{
+                background: 'rgba(191,139,46,.08)',
+                border: '0.5px solid rgba(191,139,46,.25)',
+                color: 'var(--gold)',
+              }}
+            >
+              {generatingRetro ? 'Generating…' : '✦ Weekly Retro'}
+            </button>
+            <button
+              className="top-btn"
+              onClick={postUpdate}
+              disabled={posting || !content.trim()}
+            >
+              {posting ? 'Posting…' : 'Post Update'}
+            </button>
+          </div>
         </div>
       </div>
 

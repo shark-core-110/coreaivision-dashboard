@@ -30,6 +30,7 @@ const NAV_ITEMS: ResultItem[] = [
   { id: 'nav-lyra',        label: 'Lyra Brain',       sublabel: 'Lyra AI character',        href: '/dashboard/lyra-brain',         category: 'Pages' },
   { id: 'nav-assign',      label: 'Assign Tasks',     sublabel: 'Task assignment',          href: '/dashboard/assign-tasks',       category: 'Pages' },
   { id: 'nav-marketing',   label: 'Marketing',        sublabel: 'Marketing hub',            href: '/dashboard/marketing',          category: 'Pages' },
+  { id: 'nav-ask',         label: 'Ask AI',           sublabel: 'Chat with your data',      href: '/dashboard/ask',                category: 'Pages' },
   { id: 'adm-bottlenecks', label: 'Edit Bottlenecks', sublabel: 'Admin CRUD',               href: '/dashboard/admin/bottlenecks',  category: 'Admin' },
   { id: 'adm-workstreams', label: 'Edit Workstreams', sublabel: 'Admin CRUD',               href: '/dashboard/admin/workstreams',  category: 'Admin' },
   { id: 'adm-goals',       label: 'Edit Goals',       sublabel: 'Admin CRUD',               href: '/dashboard/admin/goals',        category: 'Admin' },

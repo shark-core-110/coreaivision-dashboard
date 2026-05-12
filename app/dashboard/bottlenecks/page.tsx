@@ -13,11 +13,24 @@ interface Bottleneck {
 }
 
 export default function Bottlenecks() {
-  const [items, setItems] = useState<Bottleneck[]>([])
+  const [items,      setItems]      = useState<Bottleneck[]>([])
+  const [scanning,   setScanning]   = useState(false)
+  const [scanResult, setScanResult] = useState<string | null>(null)
+
+  const fetchItems = () => {
+    const supabase = createClient()
+    return supabase
+      .from('bottlenecks')
+      .select('id, text, severity, owner, scope, resolved')
+      .eq('scope', 'overview')
+      .eq('resolved', false)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => { if (data) setItems(data as Bottleneck[]) })
+  }
 
   useEffect(() => {
-    const supabase = createClient()
     let cancelled = false
+    const supabase = createClient()
     supabase
       .from('bottlenecks')
       .select('id, text, severity, owner, scope, resolved')
@@ -31,12 +44,51 @@ export default function Bottlenecks() {
     return () => { cancelled = true }
   }, [])
 
+  const scanForStalled = async () => {
+    setScanning(true)
+    setScanResult(null)
+    try {
+      const res = await fetch('/api/ai/detect-bottlenecks', { method: 'POST' })
+      const data = await res.json() as { created: number; message?: string; tasks?: string[] }
+      if (data.created > 0) {
+        setScanResult(`${data.created} new bottleneck${data.created > 1 ? 's' : ''} flagged from stalled tasks`)
+        await fetchItems()
+      } else {
+        setScanResult(data.message ?? 'No new bottlenecks found')
+      }
+    } catch {
+      setScanResult('Scan failed — check console')
+    } finally {
+      setScanning(false)
+    }
+  }
+
   const crit = items.filter(i => i.severity === 'crit')
   const med  = items.filter(i => i.severity === 'med')
   const low  = items.filter(i => i.severity === 'low')
 
   return (
     <>
+      {/* Scan button */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+        <button
+          onClick={scanForStalled}
+          disabled={scanning}
+          style={{
+            padding: '8px 16px', cursor: scanning ? 'not-allowed' : 'pointer',
+            background: 'rgba(239,68,68,.07)', border: '0.5px solid rgba(239,68,68,.22)',
+            color: '#ef4444', fontFamily: 'var(--mono)', fontSize: 9,
+            fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase',
+            opacity: scanning ? .5 : 1,
+          }}
+        >
+          {scanning ? 'Scanning…' : '⬤ Scan for Stalled Tasks'}
+        </button>
+        {scanResult && (
+          <span style={{ fontSize: 12, color: 'var(--ink3)' }}>{scanResult}</span>
+        )}
+      </div>
+
       <div className="focus-block">
         <div className="focus-label">Your personal bottleneck</div>
         <div className="focus-text">

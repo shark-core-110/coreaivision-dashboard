@@ -19,6 +19,7 @@ const adminNavItems = [
     { label: 'Repurpose',     href: '/dashboard/repurpose',   icon: '↻', key: 'R' },
     { label: 'Pipeline',      href: '/dashboard/pipeline',    icon: '▷', key: 'L' },
     { label: 'AI Parse',     href: '/dashboard/parse',       icon: '◎', key: 'I' },
+    { label: 'Ask AI',       href: '/dashboard/ask',         icon: '◎', key: 'K' },
     { label: 'Content Cal',   href: '/dashboard/calendar',    icon: '☰', key: '7' },
     { label: 'Bottlenecks',   href: '/dashboard/bottlenecks', icon: '◉', key: '4' },
   ]},

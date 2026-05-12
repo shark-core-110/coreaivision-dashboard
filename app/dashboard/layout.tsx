@@ -34,6 +34,7 @@ const pageTitles: Record<string, string> = {
   '/dashboard/admin/workstreams':    'Edit Workstreams',
   '/dashboard/admin/goals':          'Edit Goals',
   '/dashboard/admin/team':           'Edit Team',
+  '/dashboard/ask':                  'Ask AI',
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
