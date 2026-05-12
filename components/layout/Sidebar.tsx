@@ -13,7 +13,6 @@ const adminNavItems = [
     { label: 'Team & Ops',    href: '/dashboard/ops',         icon: '⚙', key: '2' },
     { label: 'Team Pages',    href: '/dashboard/team',        icon: '◎', key: 'P' },
     { label: 'Assign Tasks',  href: '/dashboard/assign-tasks',icon: '✦', key: 'A' },
-    { label: 'Weekly Cadence',href: '/dashboard/cadence',     icon: '◑', key: 'W' },
     { label: 'Projects',      href: '/dashboard/projects',    icon: '◫', key: '3' },
     { label: 'Updates',       href: '/dashboard/updates',     icon: '◌', key: 'U' },
     { label: 'Scripts',       href: '/dashboard/scripts',     icon: '◧', key: 'S' },
@@ -21,10 +20,6 @@ const adminNavItems = [
     { label: 'Pipeline',      href: '/dashboard/pipeline',    icon: '▷', key: 'L' },
     { label: 'Content Cal',   href: '/dashboard/calendar',    icon: '☰', key: '7' },
     { label: 'Bottlenecks',   href: '/dashboard/bottlenecks', icon: '◉', key: '4' },
-  ]},
-  { section: 'AI Studio', items: [
-    { label: 'Lyra Brain',    href: '/dashboard/lyra-brain',  icon: '◈', key: 'B' },
-    { label: 'Lyra Deals',    href: '/dashboard/lyra',        icon: '◉', key: 'D' },
   ]},
   { section: 'Growth', items: [
     { label: 'Instagram',     href: '/dashboard/instagram',   icon: '◆', key: '5' },

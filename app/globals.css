@@ -1,38 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
 
 :root {
-  --void:       #FAF8F4;
-  --s1:         #FFFFFF;
-  --s2:         #F5F2EC;
-  --s3:         #EBE7DF;
-  --s4:         #E2DDD5;
-  --b1:         #E8E2D5;
-  --b2:         #DAD3C4;
-  --b3:         #C8C0AE;
-  --ink:        #1C1914;
-  --ink2:       #524E48;
-  --ink3:       #8A857C;
-  --ink4:       #BFBAB2;
-  --gold:       #BF8B2E;
-  --gold2:      #9A6E1E;
-  --gold3:      #7A5412;
-  --gold-line:  rgba(191,139,46,0.22);
-  --gold-glow:  rgba(191,139,46,0.07);
-  --red:        #C0392B;
-  --green:      #1E8A4A;
-  --amber:      #B86800;
-  --blue:       #1E6FA8;
+  /* ── Core AI Vision Brand Palette (dark) ── */
+  --void:       #0A0A0A;
+  --s1:         #141414;
+  --s2:         #1C1C1C;
+  --s3:         #242424;
+  --s4:         #2C2C2C;
+  --b1:         #2A2A2A;
+  --b2:         #333333;
+  --b3:         #444444;
+  --ink:        #F0EDE8;
+  --ink2:       #C8C4BE;
+  --ink3:       #888888;
+  --ink4:       #555555;
+  --gold:       #D4A84B;
+  --gold2:      #C49438;
+  --gold3:      #A87A28;
+  --gold-line:  rgba(212,168,75,0.22);
+  --gold-glow:  rgba(212,168,75,0.07);
+  --red:        #E63946;
+  --green:      #2DB56A;
+  --amber:      #F0A030;
+  --blue:       #4A90D9;
   --mono:       'DM Mono', monospace;
   --hnd:        'Helvetica Neue Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --nav-w:      220px;
   --top-h:      52px;
   --bar-h:      36px;
-  /* aliases for shared page components */
-  --surface:    #FFFFFF;
-  --surface2:   #F5F2EC;
-  --border:     #E8E2D5;
-  --accent:     #BF8B2E;
-  --ink1:       #1C1914;
+  /* aliases */
+  --surface:    #141414;
+  --surface2:   #1C1C1C;
+  --border:     #2A2A2A;
+  --accent:     #D4A84B;
+  --ink1:       #F0EDE8;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -59,12 +60,12 @@ body {
 .topbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
   height: var(--top-h);
-  background: rgba(250,248,244,0.97);
+  background: rgba(10,10,10,0.97);
   border-bottom: 0.5px solid var(--b1);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 24px;
   backdrop-filter: blur(20px);
-  box-shadow: 0 1px 16px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 16px rgba(0,0,0,0.4);
 }
 .topbar::after {
   content: ''; position: absolute; bottom: 0; left: 0; right: 0;
@@ -111,7 +112,7 @@ body {
 .status-bar {
   position: fixed; top: var(--top-h); left: var(--nav-w); right: 0; z-index: 199;
   height: var(--bar-h);
-  background: rgba(250,248,244,0.96);
+  background: rgba(10,10,10,0.96);
   border-bottom: 0.5px solid var(--b1);
   display: flex; align-items: center; gap: 6px; padding: 0 24px;
   overflow-x: auto;
@@ -132,7 +133,7 @@ body {
 .nav {
   position: fixed; top: calc(var(--top-h) + var(--bar-h)); left: 0; bottom: 0; z-index: 198;
   width: var(--nav-w);
-  background: rgba(255,253,249,0.99);
+  background: rgba(14,14,14,0.99);
   border-right: 0.5px solid var(--b1);
   display: flex; flex-direction: column;
   padding: 18px 10px 24px;
@@ -529,8 +530,8 @@ button { cursor: pointer; font-family: var(--mono); }
 }
 .login-box {
   width: 100%; max-width: 380px; padding: 48px 40px;
-  background: var(--s1); border: 0.5px solid var(--b1);
-  box-shadow: 0 4px 32px rgba(0,0,0,0.08); position: relative;
+  background: var(--s1); border: 0.5px solid var(--b2);
+  box-shadow: 0 4px 48px rgba(0,0,0,0.5); position: relative;
 }
 .login-box::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
