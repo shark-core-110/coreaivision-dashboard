@@ -11,7 +11,6 @@ const adminNavItems = [
   ]},
   { section: 'Operations', items: [
     { label: 'Team & Ops',    href: '/dashboard/ops',         icon: '⚙', key: '2' },
-    { label: 'Team Pages',    href: '/dashboard/team',        icon: '◎', key: 'P' },
     { label: 'Assign Tasks',  href: '/dashboard/assign-tasks',icon: '✦', key: 'A' },
     { label: 'Projects',      href: '/dashboard/projects',    icon: '◫', key: '3' },
     { label: 'Updates',       href: '/dashboard/updates',     icon: '◌', key: 'U' },
