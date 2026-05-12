@@ -748,3 +748,173 @@ button { cursor: pointer; font-family: var(--mono); }
   margin-top: 2px;
   font-family: var(--mono);
 }
+
+/* ── LOGIN ENHANCEMENTS ──────────────────────────────────────────────────── */
+.login-mode-toggle {
+  display: flex; gap: 0; margin-bottom: 28px;
+  border: 0.5px solid var(--b2); overflow: hidden;
+}
+.login-mode-btn {
+  flex: 1; padding: 9px 12px;
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
+  letter-spacing: .08em; text-transform: uppercase;
+  background: transparent; color: var(--ink3);
+  border: none; cursor: pointer; transition: background .15s, color .15s;
+}
+.login-mode-btn:hover { background: var(--s2); color: var(--ink2); }
+.login-mode-btn.active {
+  background: var(--gold-glow); color: var(--gold);
+  border-bottom: 1.5px solid var(--gold);
+}
+.login-label-hint {
+  font-family: var(--mono); font-size: 8px; font-weight: 400;
+  letter-spacing: .02em; text-transform: none; color: var(--ink4);
+}
+.login-switch {
+  margin-top: 20px; text-align: center;
+  font-family: var(--mono); font-size: 9px; font-weight: 400;
+  color: var(--ink3); letter-spacing: .04em;
+}
+.login-switch-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  color: var(--gold); letter-spacing: .04em; text-decoration: underline;
+  padding: 0;
+}
+.login-switch-btn:hover { color: var(--gold2); }
+
+/* ── HAMBURGER BUTTON (desktop: hidden) ──────────────────────────────────── */
+.hamburger-btn {
+  display: none;
+  flex-direction: column; justify-content: center; gap: 5px;
+  width: 36px; height: 36px; padding: 6px;
+  background: transparent; border: none; cursor: pointer;
+  flex-shrink: 0;
+}
+.hamburger-btn span {
+  display: block; height: 1.5px; width: 100%;
+  background: var(--ink); border-radius: 1px;
+  transition: transform .2s, opacity .2s;
+}
+
+/* ── NAV BACKDROP (desktop: hidden) ─────────────────────────────────────── */
+.nav-backdrop {
+  display: none;
+  position: fixed; inset: 0; z-index: 197;
+  background: rgba(28, 25, 20, 0.5);
+  backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+
+/* ── NAV CLOSE BUTTON (desktop: hidden) ─────────────────────────────────── */
+.nav-close-btn {
+  display: none;
+  position: absolute; top: 12px; right: 12px;
+  width: 28px; height: 28px;
+  background: var(--s3); border: 0.5px solid var(--b2); cursor: pointer;
+  font-family: var(--mono); font-size: 10px; color: var(--ink3);
+  align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.nav-close-btn:hover { background: var(--b2); color: var(--ink); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   RESPONSIVE — TABLET & MOBILE  (≤ 768px)
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* ── TOPBAR ── */
+  .topbar { padding: 0 12px 0 8px; gap: 0; }
+  .topbar-center { display: none; }
+  .top-btn { display: none; }
+  .hamburger-btn { display: flex; }
+  .brand-name { font-size: 9px; letter-spacing: .15em; }
+  .live-time { font-size: 11px; }
+  .live-date-small { display: none; }
+
+  /* ── SIDEBAR — off-screen by default, slides in on nav-open ── */
+  .nav-backdrop { display: block; }
+  .nav-close-btn { display: flex; }
+
+  .nav {
+    top: 0 !important;
+    transform: translateX(-100%);
+    transition: transform .28s cubic-bezier(.16,1,.3,1);
+    box-shadow: 4px 0 32px rgba(0,0,0,0.18);
+    z-index: 300;
+    padding-top: 52px;
+    width: 260px;
+  }
+  body.nav-open .nav {
+    transform: translateX(0);
+  }
+  body.nav-open .nav-backdrop {
+    opacity: 1; pointer-events: auto;
+  }
+
+  /* ── STATUS BAR — full width ── */
+  .status-bar { left: 0; padding: 0 12px; }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    padding: calc(var(--top-h) + var(--bar-h) + 20px) 14px 60px 14px;
+    max-width: 100%;
+  }
+
+  /* ── GRIDS → SINGLE COLUMN ── */
+  .grid2 { grid-template-columns: 1fr; }
+  .grid3 { grid-template-columns: 1fr; }
+  .grid4 { grid-template-columns: 1fr 1fr; }
+  .grid5 { grid-template-columns: 1fr 1fr; }
+
+  /* ── KPI STRIP → 2 COLS ── */
+  .kpi-strip { grid-template-columns: 1fr 1fr; }
+
+  /* ── IG STATS → 2 COLS ── */
+  .ig-stats { grid-template-columns: 1fr 1fr; }
+
+  /* ── CAL GRID → 3 COLS, scrollable ── */
+  .cal-grid { grid-template-columns: repeat(3, minmax(100px, 1fr)); overflow-x: auto; }
+
+  /* ── CARD BUTTON GRID → 3 COLS ── */
+  .btn-grid-6 { grid-template-columns: repeat(3, 1fr); }
+
+  /* ── FOCUS / CADENCE / TODAY → SINGLE ── */
+  .focus-grid   { grid-template-columns: 1fr; }
+  .cadence-grid { grid-template-columns: 1fr; }
+
+  /* ── DEAL + DNA → SINGLE ── */
+  .deal-stats { grid-template-columns: 1fr; }
+  .da-grid    { grid-template-columns: 1fr; }
+
+  /* ── NUMBERS — slightly smaller ── */
+  .metric-val { font-size: 26px; }
+  .kpi-val    { font-size: 22px; }
+
+  /* ── HERO BUTTONS — stacked ── */
+  .hero-cta-bar { flex-direction: column; }
+  .hero-btn     { justify-content: center; }
+
+  /* ── CARD PADDING — tighter ── */
+  .card   { padding: 14px; }
+  .metric { padding: 14px; }
+  .kpi    { padding: 12px 14px; }
+
+  /* ── LOGIN BOX — full width ── */
+  .login-box { padding: 36px 24px; max-width: 100%; margin: 16px; }
+
+  /* ── CLIENT ROW ── */
+  .client-right { flex-wrap: wrap; gap: 6px; }
+}
+
+/* ── PHONE ONLY (≤ 480px) ───────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .grid4    { grid-template-columns: 1fr; }
+  .grid5    { grid-template-columns: 1fr; }
+  .kpi-strip  { grid-template-columns: 1fr 1fr; }
+  .btn-grid-6 { grid-template-columns: repeat(2, 1fr); }
+  .cal-grid   { grid-template-columns: repeat(2, minmax(90px, 1fr)); }
+  .team-grid  { grid-template-columns: repeat(2, 1fr); }
+  .main { padding: calc(var(--top-h) + var(--bar-h) + 16px) 12px 48px 12px; }
+  .topbar { padding: 0 10px 0 6px; }
+}

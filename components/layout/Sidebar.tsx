@@ -40,60 +40,72 @@ export default function Sidebar() {
   const pathname = usePathname()
   const { user, loading } = useCurrentUser()
 
+  const closeNav = () => document.body.classList.remove('nav-open')
+
   // Team member view — minimal nav
   if (!loading && user && !user.isAdmin) {
     return (
-      <nav className="nav">
-        <div>
-          <div className="nav-section">My Workspace</div>
-          <Link
-            href="/dashboard/my"
-            className={`nav-tab ${pathname === '/dashboard/my' ? 'active' : ''}`}
-          >
-            <span className="nav-tab-icon">◈</span>
-            My Dashboard
-          </Link>
-        </div>
-
-        <div style={{ marginTop: 'auto', padding: '16px 0 8px' }}>
-          <div style={{
-            margin: '0 8px',
-            padding: '10px 12px',
-            background: 'var(--s2)',
-            border: '0.5px solid var(--b1)',
-            borderRadius: 8,
-            fontSize: 12,
-            color: 'var(--ink3)',
-          }}>
-            <div style={{ fontWeight: 600, color: 'var(--ink2)', marginBottom: 3 }}>
-              {user.name}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--ink4)' }}>{user.email}</div>
+      <>
+        <div className="nav-backdrop" onClick={closeNav} />
+        <nav className="nav">
+          <button className="nav-close-btn" onClick={closeNav} aria-label="Close navigation">✕</button>
+          <div>
+            <div className="nav-section">My Workspace</div>
+            <Link
+              href="/dashboard/my"
+              className={`nav-tab ${pathname === '/dashboard/my' ? 'active' : ''}`}
+              onClick={closeNav}
+            >
+              <span className="nav-tab-icon">◈</span>
+              My Dashboard
+            </Link>
           </div>
-        </div>
-      </nav>
+
+          <div style={{ marginTop: 'auto', padding: '16px 0 8px' }}>
+            <div style={{
+              margin: '0 8px',
+              padding: '10px 12px',
+              background: 'var(--s2)',
+              border: '0.5px solid var(--b1)',
+              borderRadius: 8,
+              fontSize: 12,
+              color: 'var(--ink3)',
+            }}>
+              <div style={{ fontWeight: 600, color: 'var(--ink2)', marginBottom: 3 }}>
+                {user.name}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--ink4)' }}>{user.email}</div>
+            </div>
+          </div>
+        </nav>
+      </>
     )
   }
 
   // Admin (Shark) view — full nav
   return (
-    <nav className="nav">
-      {adminNavItems.map((group) => (
-        <div key={group.section}>
-          <div className="nav-section">{group.section}</div>
-          {group.items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-tab ${pathname === item.href ? 'active' : ''}`}
-            >
-              <span className="nav-tab-icon">{item.icon}</span>
-              {item.label}
-              <span className="nav-tab-key">{item.key}</span>
-            </Link>
-          ))}
-        </div>
-      ))}
-    </nav>
+    <>
+      <div className="nav-backdrop" onClick={closeNav} />
+      <nav className="nav">
+        <button className="nav-close-btn" onClick={closeNav} aria-label="Close navigation">✕</button>
+        {adminNavItems.map((group) => (
+          <div key={group.section}>
+            <div className="nav-section">{group.section}</div>
+            {group.items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-tab ${pathname === item.href ? 'active' : ''}`}
+                onClick={closeNav}
+              >
+                <span className="nav-tab-icon">{item.icon}</span>
+                {item.label}
+                <span className="nav-tab-key">{item.key}</span>
+              </Link>
+            ))}
+          </div>
+        ))}
+      </nav>
+    </>
   )
 }

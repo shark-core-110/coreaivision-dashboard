@@ -28,8 +28,17 @@ export default function Topbar({ pageTitle }: { pageTitle: string }) {
     return () => clearInterval(id)
   }, [])
 
+  const toggleMobileNav = () => {
+    document.body.classList.toggle('nav-open')
+  }
+
   return (
     <div className="topbar">
+      {/* Hamburger — mobile only, hidden on desktop via CSS */}
+      <button className="hamburger-btn" onClick={toggleMobileNav} aria-label="Toggle navigation">
+        <span /><span /><span />
+      </button>
+
       <div className="brand">
         <div className="brand-pulse" />
         <div className="brand-name">Core AI Vision</div>
