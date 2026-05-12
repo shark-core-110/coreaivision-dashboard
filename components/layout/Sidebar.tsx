@@ -30,6 +30,12 @@ const adminNavItems = [
   { section: 'Vision', items: [
     { label: 'Goals',         href: '/dashboard/goals',       icon: '◑', key: '9' },
   ]},
+  { section: 'Admin', items: [
+    { label: 'Edit Bottlenecks', href: '/dashboard/admin/bottlenecks', icon: '◉', key: 'B' },
+    { label: 'Edit Workstreams', href: '/dashboard/admin/workstreams', icon: '◈', key: 'W' },
+    { label: 'Edit Goals',       href: '/dashboard/admin/goals',       icon: '◑', key: 'G' },
+    { label: 'Edit Team',        href: '/dashboard/admin/team',        icon: '⚙', key: 'M' },
+  ]},
 ]
 
 export default function Sidebar() {
