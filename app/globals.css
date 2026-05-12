@@ -1,51 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
-
 :root {
-  /* ── Core AI Vision Brand Palette (dark) ── */
-  --void:       #0A0A0A;
-  --s1:         #141414;
-  --s2:         #1C1C1C;
-  --s3:         #242424;
-  --s4:         #2C2C2C;
-  --b1:         #2A2A2A;
-  --b2:         #333333;
-  --b3:         #444444;
-  --ink:        #F0EDE8;
-  --ink2:       #C8C4BE;
-  --ink3:       #888888;
-  --ink4:       #555555;
-  --gold:       #D4A84B;
-  --gold2:      #C49438;
-  --gold3:      #A87A28;
-  --gold-line:  rgba(212,168,75,0.22);
-  --gold-glow:  rgba(212,168,75,0.07);
-  --red:        #E63946;
-  --green:      #2DB56A;
-  --amber:      #F0A030;
-  --blue:       #4A90D9;
-  --mono:       'DM Mono', monospace;
-  --hnd:        'Helvetica Neue Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --nav-w:      220px;
-  --top-h:      52px;
-  --bar-h:      36px;
+  /* ── Apple-inspired dark palette — no gold, white metallic ── */
+  --void:       #000000;
+  --s1:         #1C1C1E;
+  --s2:         #2C2C2E;
+  --s3:         #3A3A3C;
+  --s4:         #48484A;
+  --b1:         #38383A;
+  --b2:         #48484A;
+  --b3:         #636366;
+  --ink:        #FFFFFF;
+  --ink2:       rgba(235,235,245,0.6);
+  --ink3:       rgba(235,235,245,0.3);
+  --ink4:       rgba(235,235,245,0.15);
+  /* Gold replaced by white-silver — all var(--gold) refs become clean white */
+  --gold:       rgba(255,255,255,0.88);
+  --gold2:      rgba(255,255,255,0.6);
+  --gold3:      rgba(255,255,255,0.4);
+  --gold-line:  rgba(255,255,255,0.10);
+  --gold-glow:  rgba(255,255,255,0.04);
+  /* System colors */
+  --red:        #FF3B30;
+  --green:      #30D158;
+  --amber:      #FF9F0A;
+  --blue:       #0A84FF;
+  /* Typography — system font stack */
+  --mono:       'SF Mono', 'Menlo', 'Monaco', monospace;
+  --hnd:        -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  --nav-w:      212px;
+  --top-h:      50px;
+  --bar-h:      34px;
+  --radius:     12px;
   /* aliases */
-  --surface:    #141414;
-  --surface2:   #1C1C1C;
-  --border:     #2A2A2A;
-  --accent:     #D4A84B;
-  --ink1:       #F0EDE8;
+  --surface:    #1C1C1E;
+  --surface2:   #2C2C2E;
+  --border:     #38383A;
+  --accent:     #FFFFFF;
+  --ink1:       #FFFFFF;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { font-size: 14px; scroll-behavior: smooth; }
+html { font-size: 13px; scroll-behavior: smooth; }
 
 body {
   background: var(--void);
   color: var(--ink);
   font-family: var(--hnd);
   font-weight: 400;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
@@ -919,3 +921,296 @@ button { cursor: pointer; font-family: var(--mono); }
   .main { padding: calc(var(--top-h) + var(--bar-h) + 16px) 12px 48px 12px; }
   .topbar { padding: 0 10px 0 6px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   APPLE UI SYSTEM — shapes, typography, spacing, progressive disclosure
+   All overrides layered on top; no class renames needed
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Base radius on every structural element ── */
+.card, .metric, .kpi, .cadence-card, .focus-card, .team-card,
+.deal-expand, .da-card, .guide-bar, .focus-block,
+.notif-dropdown, .toast {
+  border-radius: var(--radius) !important;
+}
+
+/* ── Cards — cleaner Apple grouped style ── */
+.card {
+  background: var(--s1);
+  border: none;
+  box-shadow: 0 1px 0 var(--b1), 0 0 0 0.5px var(--b1);
+  padding: 16px 18px;
+}
+.card::before { display: none; } /* remove gold gradient line */
+
+.metric {
+  background: var(--s1);
+  border: none;
+  box-shadow: 0 0 0 0.5px var(--b1);
+  padding: 16px 18px;
+}
+.metric::before { display: none; }
+
+.kpi {
+  background: var(--s1);
+  border: none;
+  box-shadow: 0 0 0 0.5px var(--b1);
+  padding: 14px 16px;
+}
+.kpi::before { display: none; }
+
+/* ── All buttons → pill / capsule shape ── */
+.hero-btn, .action-btn, .top-btn, .qa-btn,
+.btn, .btn-primary, .btn-secondary {
+  border-radius: 20px !important;
+  padding: 11px 22px !important;
+  font-size: 11px !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  font-family: var(--hnd) !important;
+  font-weight: 500 !important;
+}
+
+.hero-btn { padding: 13px 28px !important; font-size: 13px !important; }
+
+/* Main CTA pill */
+.login-btn, .hero-btn-notion {
+  border-radius: 14px !important;
+  font-family: var(--hnd) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  font-size: 14px !important;
+  padding: 14px !important;
+}
+
+/* Small chip pills */
+.pill, .badge, .tbadge, .tag {
+  border-radius: 20px !important;
+  font-family: var(--hnd) !important;
+  font-size: 10px !important;
+}
+
+/* ── Card buttons (nav shortcuts) → taller, rounded ── */
+.card-btn {
+  border-radius: var(--radius) !important;
+  border: none !important;
+  background: var(--s1) !important;
+  box-shadow: 0 0 0 0.5px var(--b1) !important;
+  min-height: 80px !important;
+  padding: 16px !important;
+}
+.card-btn::before { border-radius: var(--radius) var(--radius) 0 0 !important; }
+.cb-title { font-size: 12px !important; font-weight: 500 !important; }
+.cb-desc { font-size: 9px !important; }
+.cb-icon { font-size: 16px !important; margin-bottom: 6px !important; }
+
+/* ── Nav — Apple sidebar style ── */
+.nav-section {
+  font-family: var(--hnd) !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+  color: var(--ink3) !important;
+  padding: 0 12px !important;
+  margin: 20px 0 4px !important;
+}
+.nav-tab {
+  font-family: var(--hnd) !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.01em !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  color: var(--ink2) !important;
+}
+.nav-tab:hover {
+  background: rgba(255,255,255,0.07) !important;
+  border: none !important;
+  color: var(--ink) !important;
+}
+.nav-tab.active {
+  background: rgba(255,255,255,0.12) !important;
+  border: none !important;
+  color: var(--ink) !important;
+  font-weight: 500 !important;
+}
+.nav-tab.active::before {
+  display: none !important; /* no left bar — Apple doesn't use it */
+}
+.nav-tab-key { display: none !important; } /* cleaner without keyboard hints */
+
+/* ── Topbar — minimal Apple style ── */
+.brand-name {
+  font-family: var(--hnd) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  text-transform: none !important;
+  color: var(--ink) !important;
+}
+.topbar-center {
+  font-family: var(--hnd) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  text-transform: none !important;
+  color: var(--ink) !important;
+}
+.top-btn {
+  font-family: var(--hnd) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: rgba(255,255,255,0.75) !important;
+  background: rgba(255,255,255,0.08) !important;
+  border: none !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+.top-btn:hover { background: rgba(255,255,255,0.14) !important; color: var(--ink) !important; }
+
+/* ── Metric values — bigger, bolder ── */
+.metric-val { font-size: 32px !important; font-weight: 300 !important; letter-spacing: -0.06em !important; }
+.metric-label { font-family: var(--hnd) !important; font-size: 10px !important; font-weight: 500 !important; letter-spacing: 0.01em !important; text-transform: uppercase !important; }
+.metric-sub { font-family: var(--hnd) !important; font-size: 11px !important; }
+
+.kpi-val { font-size: 28px !important; font-weight: 300 !important; letter-spacing: -0.05em !important; }
+.kpi-label { font-family: var(--hnd) !important; font-size: 10px !important; font-weight: 500 !important; letter-spacing: 0.01em !important; text-transform: uppercase !important; }
+
+/* ── Section labels — Apple style ── */
+.sec {
+  font-family: var(--hnd) !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+  color: var(--ink3) !important;
+  margin: 28px 0 8px !important;
+}
+
+.card-title {
+  font-family: var(--hnd) !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+  color: var(--ink3) !important;
+}
+
+/* ── Row typography ── */
+.row-name { font-size: 13px !important; font-weight: 500 !important; }
+.row-role { font-size: 11px !important; }
+.tname { font-size: 12px !important; }
+.tdate { font-family: var(--hnd) !important; font-size: 11px !important; }
+.bn-text { font-size: 12px !important; }
+.client-name { font-size: 13px !important; font-weight: 500 !important; }
+.client-type { font-size: 11px !important; }
+
+/* ── Status bar pills ── */
+.status-bar { gap: 4px !important; }
+.pill {
+  font-family: var(--hnd) !important;
+  font-weight: 500 !important;
+  border-radius: 20px !important;
+  padding: 3px 10px !important;
+}
+
+/* ── Login page — Apple style ── */
+.login-box {
+  border-radius: 18px !important;
+  border: none !important;
+  background: var(--s1) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8) !important;
+  padding: 44px 36px !important;
+}
+.login-box::before { display: none !important; }
+.login-wordmark {
+  font-family: var(--hnd) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  color: var(--ink) !important;
+}
+.login-sub {
+  font-family: var(--hnd) !important;
+  font-size: 11px !important;
+  letter-spacing: 0 !important;
+  color: var(--ink3) !important;
+}
+.login-label {
+  font-family: var(--hnd) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--ink2) !important;
+}
+.login-input {
+  border-radius: 10px !important;
+  border: none !important;
+  background: var(--s2) !important;
+  font-family: var(--hnd) !important;
+  font-size: 14px !important;
+  padding: 12px 14px !important;
+  color: var(--ink) !important;
+}
+.login-input:focus {
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.15) !important;
+}
+.login-mode-toggle { border-radius: 10px !important; background: var(--s2) !important; border: none !important; padding: 3px !important; gap: 3px !important; }
+.login-mode-btn { border-radius: 8px !important; }
+.login-mode-btn.active {
+  background: var(--s3) !important;
+  color: var(--ink) !important;
+  border-bottom: none !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+}
+
+/* ── Team cards ── */
+.team-card { border-radius: var(--radius) !important; border: none !important; box-shadow: 0 0 0 0.5px var(--b1) !important; }
+.team-card:hover { box-shadow: 0 0 0 0.5px var(--b2), 0 4px 16px rgba(0,0,0,0.3) !important; }
+
+/* ── Avatars — Apple color system ── */
+.avatar { background: var(--s3) !important; border: none !important; border-radius: 50% !important; }
+.tc-avatar { border-radius: 50% !important; }
+
+/* ── Interactive inputs ── */
+select, input[type="text"], input[type="date"], textarea {
+  border-radius: 10px !important;
+  border: none !important;
+  background: var(--s2) !important;
+  font-family: var(--hnd) !important;
+}
+select:focus, input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.15) !important;
+}
+
+/* ── Progress bars — thinner ── */
+.prog-track { border-radius: 4px !important; height: 3px !important; }
+.prog-fill  { border-radius: 4px !important; }
+.kpi-bar    { border-radius: 4px !important; height: 2px !important; }
+.kpi-bar-fill { border-radius: 4px !important; }
+
+/* ── Focus block ── */
+.focus-block { border-radius: 10px !important; border-left-width: 2px !important; }
+
+/* ── Timeline dots ── */
+.tl-dot { border-radius: 50% !important; }
+
+/* ── Divider ── */
+.div { background: var(--b1) !important; }
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 4px; }
+
+/* ── Red-only accent: override any remaining gold/amber on CRITICAL items ── */
+.bn-crit { background: var(--red) !important; box-shadow: 0 0 8px rgba(255,59,48,.4) !important; }
+.pill-amber { background: rgba(255,59,48,.08) !important; color: var(--red) !important; border-color: rgba(255,59,48,.2) !important; }
+.b-pending  { background: rgba(255,59,48,.08) !important; color: var(--red) !important; border-color: rgba(255,59,48,.2) !important; }
+.tb-prog    { background: rgba(255,255,255,.06) !important; color: var(--ink2) !important; }
+.tdot-prog  { background: var(--ink2) !important; box-shadow: none !important; }
+.tl-dot-prog { background: var(--ink2) !important; border-color: var(--ink2) !important; box-shadow: none !important; }
