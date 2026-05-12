@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 
 // ── SVG ring — circumference for r=52: 2π×52 ≈ 326.7
 const CIRC_IG = 326.7
-const FOLLOWERS = 18900
+const FOLLOWERS = 19900
 const TARGET    = 50000
 const PCT       = Math.round((FOLLOWERS / TARGET) * 1000) / 10   // 37.8
 
@@ -16,8 +16,8 @@ const growthData = [
   { week: 'Apr 7',  count: 16300 },
   { week: 'Apr 14', count: 16900 },
   { week: 'Apr 21', count: 17500 },
-  { week: 'Apr 28', count: 18100 },
-  { week: 'May 5',  count: 18900 },
+  { week: 'Apr 28', count: 18300 },
+  { week: 'May 12', count: 19900 },
 ]
 
 // ── Weekly post counts
@@ -29,7 +29,7 @@ const postsData = [
   { week: 'A 14', count: 2 },
   { week: 'A 21', count: 3 },
   { week: 'A 28', count: 2 },
-  { week: 'M 5',  count: 2 },
+  { week: 'M 12', count: 2 },
 ]
 
 const contentMix = [

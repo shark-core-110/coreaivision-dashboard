@@ -57,9 +57,9 @@ export default function Overview() {
       {/* ── Hero Stats ── */}
       <div className="hero-stat-row">
         <div className="hero-stat-block">
-          <div className="hero-num">18.9K</div>
+          <div className="hero-num">19.9K</div>
           <div className="hero-label">Followers</div>
-          <div className="hero-trend hero-trend-warn">37.8% → 50K goal</div>
+          <div className="hero-trend hero-trend-warn">39.8% → 50K goal</div>
         </div>
         <div className="hero-stat-block">
           <div className="hero-num">5</div>
