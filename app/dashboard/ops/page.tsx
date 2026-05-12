@@ -1,9 +1,27 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+
 // SVG ring circumference for r=24: 2π×24 ≈ 150.8
 const CIRC = 150.8
 
 const NOTION_URL = 'https://www.notion.so/34a7fe3e7f3d81f996b0cde17f7bbd35'
+
+interface Member {
+  id:                string
+  initials:          string
+  name:              string
+  role:              string
+  short_role:        string | null
+  capacity_pct:      number
+  contractor:        boolean
+  inactive:          boolean
+  blue_indicator:    boolean
+  task_description:  string | null
+  task_chips:        string[]
+  display_order:     number
+}
 
 function ringOffset(pct: number) {
   return CIRC - (pct / 100) * CIRC
@@ -30,50 +48,6 @@ function CapDots({ pct, full }: { pct: number; full: boolean }) {
   )
 }
 
-const members = [
-  {
-    init: 'KR', name: 'Krishanu',  role: 'AI Visual Artist',              short: 'AI Creator',    pct: 80,  contractor: false, inactive: false,
-    chips: ['Kling', 'Lipsync'],
-    desc: 'Lyra visuals (Nano Banana Pro 2K) · Kling 4s videos · 5 daily · Lipsync',
-  },
-  {
-    init: 'PK', name: 'Pushkar',   role: 'AI Video Creator',              short: 'AI Creator',    pct: 80,  contractor: false, inactive: false,
-    chips: ['Seedance', 'Lyra'],
-    desc: 'Seedance 2.0 videos (1/day) · Lyra visuals daily',
-  },
-  {
-    init: 'AK', name: 'Akib',      role: 'In-House Editor',               short: 'Video Editor',  pct: 100, contractor: false, inactive: false,
-    chips: ['Briefs', 'Folders'],
-    desc: 'Brief video edits · Home folder structure for Core AI Vision',
-  },
-  {
-    init: 'PA', name: 'Padmanav',  role: 'Cinematic Editor',              short: 'Editor Remote', pct: 100, contractor: false, inactive: false,
-    chips: ['Cinematic'],
-    desc: 'Cinematic video edits — remote',
-  },
-  {
-    init: 'NI', name: 'Niraj',     role: 'AI Vibe Coder',                 short: 'AI Coder',      pct: 100, contractor: false, inactive: false,
-    chips: ['Vibe Code'],
-    desc: 'AI Vibe Coding projects',
-  },
-  {
-    init: 'SJ', name: 'Sanjukta',  role: 'AI Influencer Visuals · Lyra',  short: 'Marketing',     pct: 100, contractor: false, inactive: false,
-    chips: ['Lyra Page'],
-    desc: 'AI influencer visuals & marketing — Lyra Page',
-  },
-  {
-    init: 'JO', name: 'Joyeeta',   role: 'LinkedIn Strategist · IC',      short: 'LinkedIn',      pct: 100, contractor: true,  inactive: false,
-    chips: ['Strategy'],
-    desc: 'LinkedIn strategy & content — contractor',
-    blue: true,
-  },
-  {
-    init: 'SM', name: 'Smit',      role: 'Inactive · Returns June',       short: '← June',        pct: 0,   contractor: false, inactive: true,
-    chips: [],
-    desc: '',
-  },
-]
-
 const capacitySummary = [
   { label: 'AI Creators',    pct: 80  },
   { label: 'Video Editors',  pct: 100 },
@@ -82,14 +56,37 @@ const capacitySummary = [
 ]
 
 export default function Ops() {
+  const [members, setMembers] = useState<Member[]>([])
+
+  useEffect(() => {
+    const supabase = createClient()
+    let cancelled = false
+
+    supabase
+      .from('dashboard_team')
+      .select('id, initials, name, role, short_role, capacity_pct, contractor, inactive, blue_indicator, task_description, task_chips, display_order')
+      .order('display_order', { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return
+        if (data) setMembers(data as Member[])
+      })
+
+    return () => { cancelled = true }
+  }, [])
+
+  const activeCount   = members.filter(m => !m.inactive).length
+  const inactiveLabel = members.find(m => m.inactive)?.name
+
   return (
     <>
       {/* ── Headline stats ── */}
       <div className="hero-stat-row" style={{ marginBottom: 20 }}>
         <div className="hero-stat-block">
-          <div className="hero-num">8</div>
+          <div className="hero-num">{members.length || '—'}</div>
           <div className="hero-label">Team Members</div>
-          <div className="hero-trend">Smit returns June</div>
+          <div className="hero-trend">
+            {activeCount} active{inactiveLabel ? ` · ${inactiveLabel} inactive` : ''}
+          </div>
         </div>
         <div className="hero-stat-block">
           <div className="hero-num">5</div>
@@ -107,9 +104,9 @@ export default function Ops() {
       <div className="sec" style={{ marginTop: 0, marginBottom: 8 }}>Team</div>
       <div className="member-card-grid">
         {members.map((m) => {
-          const rc = ringClass(m.pct, m.contractor, m.inactive)
+          const rc = ringClass(m.capacity_pct, m.contractor, m.inactive)
           return (
-            <div key={m.init} className={`member-card${m.inactive ? ' dim-card' : ''}`}>
+            <div key={m.id} className={`member-card${m.inactive ? ' dim-card' : ''}`}>
               <div className="member-ring-wrap">
                 <svg className="member-ring-svg" viewBox="0 0 56 56">
                   <circle className="member-ring-bg" cx="28" cy="28" r="24" />
@@ -117,15 +114,15 @@ export default function Ops() {
                     className={`member-ring-fill ${rc}`}
                     cx="28" cy="28" r="24"
                     strokeDasharray={`${CIRC} ${CIRC}`}
-                    strokeDashoffset={ringOffset(m.pct)}
+                    strokeDashoffset={ringOffset(m.capacity_pct)}
                   />
                 </svg>
-                <div className="member-avatar">{m.init}</div>
+                <div className="member-avatar">{m.initials}</div>
               </div>
               <div className="member-name">{m.name}</div>
-              <div className="member-role-short">{m.short}</div>
-              <CapDots pct={m.pct} full={m.pct >= 100 && !m.contractor} />
-              {m.chips.map((c) => (
+              <div className="member-role-short">{m.short_role ?? m.role}</div>
+              <CapDots pct={m.capacity_pct} full={m.capacity_pct >= 100 && !m.contractor} />
+              {(m.task_chips ?? []).map((c) => (
                 <div key={c} className="task-chip">{c}</div>
               ))}
             </div>
@@ -196,15 +193,15 @@ export default function Ops() {
       <div className="team-grid">
         {members.map((m) => (
           <a
-            key={m.name}
+            key={m.id}
             className="team-card"
             href={NOTION_URL}
             target="_blank"
             rel="noreferrer"
             style={m.inactive ? { opacity: 0.4, pointerEvents: 'none' } : {}}
           >
-            <div className={`tc-status${m.inactive ? ' inactive' : ''}`} style={m.blue ? { background: 'var(--blue)' } : {}} />
-            <div className="tc-avatar" style={m.blue ? { color: 'var(--blue)' } : {}}>{m.init}</div>
+            <div className={`tc-status${m.inactive ? ' inactive' : ''}`} style={m.blue_indicator ? { background: 'var(--blue)' } : {}} />
+            <div className="tc-avatar" style={m.blue_indicator ? { color: 'var(--blue)' } : {}}>{m.initials}</div>
             <div className="tc-name" style={m.inactive ? { color: 'var(--ink3)' } : {}}>{m.name}</div>
             <div className="tc-role">{m.role}</div>
           </a>
@@ -214,13 +211,13 @@ export default function Ops() {
       {/* ── Task summary ── */}
       <div className="sec" style={{ marginTop: 20, marginBottom: 8 }}>Task Summary</div>
       <div className="card">
-        {members.filter(m => !m.inactive && m.desc).map((m) => (
-          <div className="row" key={m.name}>
+        {members.filter(m => !m.inactive && m.task_description).map((m) => (
+          <div className="row" key={m.id}>
             <div className="row-left">
-              <div className="avatar">{m.init}</div>
+              <div className="avatar">{m.initials}</div>
               <div>
                 <div className="row-name">{m.name}</div>
-                <div className="row-role">{m.desc}</div>
+                <div className="row-role">{m.task_description}</div>
               </div>
             </div>
             <span className="badge b-active">Active</span>

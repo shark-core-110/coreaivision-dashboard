@@ -1,18 +1,40 @@
-const goals = [
-  { status: 'prog', title: '20–25 reels/month',          desc: 'Production pipeline running smoothly. SOP in place.',       date: 'May 2026' },
-  { status: 'todo', title: 'Launch AI Skool community',  desc: 'Landing page, waitlist, founding member offer.',             date: 'May 2026' },
-  { status: 'prog', title: 'Lyra monetized AI character',desc: "Lyra's Instagram, content series, and revenue model.",       date: 'Jun 2026' },
-  { status: 'todo', title: 'Hit 50K followers',          desc: 'Daily posting cadence. +30K from current 18.9K.',           date: 'Jul 2026' },
-  { status: 'todo', title: 'Full production house',      desc: '10+ team. SOPs for every role. Founder out of execution.',  date: 'Jul 2026' },
-]
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+
+interface Goal {
+  id:            string
+  title:         string
+  description:   string | null
+  status:        'done' | 'prog' | 'todo'
+  target_label:  string | null
+  display_order: number
+}
 
 const BRAND_WORDS     = ['Cinematic', 'Understated', 'Precise', 'Scroll-stopping', 'AI-native', 'Fashion-forward', 'Confident']
 const CONTENT_PILLARS = ['AI tutorials', 'Lyra avatar content', 'Platform promotions', 'Micro drama reels', 'Behind the scenes', 'AI tool demos']
 
-const inProgress = goals.filter(g => g.status === 'prog').length
-const notStarted = goals.filter(g => g.status === 'todo').length
-
 export default function Vision() {
+  const [goals, setGoals] = useState<Goal[]>([])
+
+  useEffect(() => {
+    const supabase = createClient()
+    let cancelled = false
+    supabase
+      .from('strategic_goals')
+      .select('id, title, description, status, target_label, display_order')
+      .order('display_order', { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return
+        if (data) setGoals(data as Goal[])
+      })
+    return () => { cancelled = true }
+  }, [])
+
+  const inProgress = goals.filter(g => g.status === 'prog').length
+  const notStarted = goals.filter(g => g.status === 'todo').length
+
   return (
     <>
       {/* ── Hero stats ── */}
@@ -39,12 +61,12 @@ export default function Vision() {
       <div className="htl-wrap">
         <div className="htl-track">
           {goals.map((g) => (
-            <div key={g.title} className="htl-col">
-              <div className="htl-date">{g.date}</div>
+            <div key={g.id} className="htl-col">
+              <div className="htl-date">{g.target_label ?? ''}</div>
               <div className={`htl-dot htl-dot-${g.status}`} />
               <div className={`htl-card${g.status === 'prog' ? ' htl-prog' : ''}`}>
                 <div className="htl-card-title">{g.title}</div>
-                <div className="htl-card-desc">{g.desc}</div>
+                <div className="htl-card-desc">{g.description ?? ''}</div>
               </div>
             </div>
           ))}

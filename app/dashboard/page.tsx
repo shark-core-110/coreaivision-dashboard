@@ -1,23 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
-const criticalItems = [
-  { dot: 'bn-crit', text: 'Syntx.ai Week 1 batch — 9 reels due',    owner: 'Team'        },
-  { dot: 'bn-crit', text: 'Arcads AI — 2 reels due',                 owner: 'AI Creators' },
-  { dot: 'bn-crit', text: 'TapNow — 3 reels due',                    owner: 'AI Creators' },
-  { dot: 'bn-med',  text: 'Micro drama series — episode concept',     owner: 'Shark'       },
-  { dot: 'bn-med',  text: 'Niraj onboarding — AI Vibe Coder setup',  owner: 'Shark'       },
-]
+interface Workstream {
+  id: string
+  name: string
+  status: string
+  icon: string
+  badge_class: string
+  display_order: number
+}
 
-const workstreams = [
-  { icon: '🎬', name: 'Content creation',    badge: 'b-active',  label: 'Active'   },
-  { icon: '✦',  name: 'Lyra AI character',   badge: 'b-blue',    label: 'Building' },
-  { icon: '◈',  name: 'LinkedIn / personal', badge: 'b-active',  label: 'Active'   },
-  { icon: '◉',  name: 'AI Skool community',  badge: 'b-pending', label: 'Planning' },
-  { icon: '◆',  name: 'Micro drama series',  badge: 'b-pending', label: 'Starting' },
-]
+interface Bottleneck {
+  id: string
+  text: string
+  severity: 'crit' | 'med' | 'low'
+  owner: string | null
+  scope: string
+  resolved: boolean
+}
+
+// Map status text to a human label for the badge
+const STATUS_LABEL: Record<string, string> = {
+  active:   'Active',
+  building: 'Building',
+  planning: 'Planning',
+  starting: 'Starting',
+  paused:   'Paused',
+  done:     'Done',
+}
 
 const pipeline = [
   { count: 2,  label: 'Filming',   dot: 'ps-filming' },
@@ -46,10 +59,36 @@ const quickLinks = [
 ]
 
 export default function Overview() {
-  const [critOpen, setCritOpen] = useState(false)
-  const [wsOpen,   setWsOpen]   = useState(false)
+  const [critOpen,    setCritOpen]    = useState(false)
+  const [wsOpen,      setWsOpen]      = useState(false)
+  const [workstreams, setWorkstreams] = useState<Workstream[]>([])
+  const [bottlenecks, setBottlenecks] = useState<Bottleneck[]>([])
 
-  const critCount   = criticalItems.filter(i => i.dot === 'bn-crit').length
+  useEffect(() => {
+    const supabase = createClient()
+    let cancelled = false
+
+    Promise.all([
+      supabase
+        .from('workstreams')
+        .select('id, name, status, icon, badge_class, display_order')
+        .order('display_order', { ascending: true }),
+      supabase
+        .from('bottlenecks')
+        .select('id, text, severity, owner, scope, resolved')
+        .eq('scope', 'overview')
+        .eq('resolved', false)
+        .order('created_at', { ascending: true }),
+    ]).then(([wsRes, bnRes]) => {
+      if (cancelled) return
+      if (wsRes.data) setWorkstreams(wsRes.data as Workstream[])
+      if (bnRes.data) setBottlenecks(bnRes.data as Bottleneck[])
+    })
+
+    return () => { cancelled = true }
+  }, [])
+
+  const critCount   = bottlenecks.filter(b => b.severity === 'crit').length
   const onlineCount = teamNow.filter(m => m.online).length
 
   return (
@@ -120,11 +159,11 @@ export default function Overview() {
       </button>
       {critOpen && (
         <div className="collapse-body">
-          {criticalItems.map((item, i) => (
-            <div key={i} className="bn-row">
-              <div className={`bn-dot ${item.dot}`} />
+          {bottlenecks.map((item) => (
+            <div key={item.id} className="bn-row">
+              <div className={`bn-dot bn-${item.severity}`} />
               <div className="bn-text">{item.text}</div>
-              <div className="bn-owner">{item.owner}</div>
+              <div className="bn-owner">{item.owner ?? ''}</div>
             </div>
           ))}
         </div>
@@ -142,13 +181,15 @@ export default function Overview() {
       </button>
       {wsOpen && (
         <div className="collapse-body">
-          {workstreams.map((ws, i) => (
-            <div key={i} className="row">
+          {workstreams.map((ws) => (
+            <div key={ws.id} className="row">
               <div className="row-left">
                 <span>{ws.icon}</span>
                 <span className="row-name">{ws.name}</span>
               </div>
-              <span className={`badge ${ws.badge}`}>{ws.label}</span>
+              <span className={`badge ${ws.badge_class}`}>
+                {STATUS_LABEL[ws.status] ?? ws.status}
+              </span>
             </div>
           ))}
         </div>
