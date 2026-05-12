@@ -1,28 +1,23 @@
-// SVG ring circumference for r=27: 2π×27 ≈ 169.6
-const CIRC = 169.6
+import SVGRing from '@/components/ui/SVGRing'
 
 function ClientRing({ done, total }: { done: number; total: number }) {
-  const pct    = total > 0 ? done / total : 0
-  const offset = CIRC - pct * CIRC
+  const pct     = total > 0 ? (done / total) * 100 : 0
   const hasDone = done > 0
 
   return (
-    <div className="client-ring-wrap">
-      <svg className="client-ring-svg" viewBox="0 0 64 64">
-        <circle className="client-ring-bg" cx="32" cy="32" r="27" />
-        <circle
-          className={`client-ring-fill${hasDone ? ' ring-done' : ' ring-empty'}`}
-          cx="32" cy="32" r="27"
-          strokeDasharray={`${CIRC} ${CIRC}`}
-          strokeDashoffset={offset}
-        />
-      </svg>
+    <SVGRing
+      pct={pct}
+      radius={27}
+      bgClass="client-ring-bg"
+      fillClass={`client-ring-fill${hasDone ? ' ring-done' : ' ring-empty'}`}
+      wrapperClass="client-ring-wrap"
+    >
       <div className="client-ring-label">
         {total > 0
           ? <>{done}<br /><span style={{ fontSize: 8, opacity: 0.5 }}>/{total}</span></>
           : '—'}
       </div>
-    </div>
+    </SVGRing>
   )
 }
 

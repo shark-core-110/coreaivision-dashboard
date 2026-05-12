@@ -330,7 +330,7 @@ export default function PipelinePage() {
       {/* ── ADD MODAL ── */}
       {showAdd && (
         <div onClick={() => setShowAdd(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(28,25,20,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--s1)', border: '0.5px solid var(--b1)', padding: 28, width: 420, position: 'relative', boxShadow: '0 20px 56px rgba(0,0,0,0.18)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--s1)', border: '0.5px solid var(--b1)', padding: 28, width: 'min(420px, calc(100vw - 32px))', position: 'relative', boxShadow: '0 20px 56px rgba(0,0,0,0.18)' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: STAGES.find(s => s.key === addStage)?.color }} />
             <div style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: STAGES.find(s => s.key === addStage)?.color, marginBottom: 18, fontWeight: 500 }}>
               Add to {STAGES.find(s => s.key === addStage)?.label}
@@ -390,7 +390,7 @@ export default function PipelinePage() {
       {/* ── DETAIL SIDE PANEL ── */}
       {detail && (
         <div onClick={() => setDetail(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(28,25,20,0.35)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end' }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: 360, background: 'var(--s1)', borderLeft: '0.5px solid var(--b1)', height: '100vh', overflowY: 'auto', padding: 28, boxShadow: '-8px 0 40px rgba(0,0,0,0.12)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: 'min(360px, 100vw)', background: 'var(--s1)', borderLeft: '0.5px solid var(--b1)', height: '100vh', overflowY: 'auto', padding: 28, boxShadow: '-8px 0 40px rgba(0,0,0,0.12)' }}>
             {(() => {
               const s = STAGES.find(st => st.key === detail.prod_status)!
               return <div style={{ background: s.bg, border: `0.5px solid ${s.border}`, padding: '5px 12px', marginBottom: 18, display: 'inline-block' }}><span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 500, letterSpacing: '.1em', textTransform: 'uppercase', color: s.color }}>{s.label}</span></div>
