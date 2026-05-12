@@ -1905,3 +1905,140 @@ select:focus, input[type="text"]:focus, input[type="date"]:focus, textarea:focus
   line-height: 1.4;
 }
 .htl-card.htl-prog { box-shadow: 0 0 0 0.5px rgba(255,255,255,0.12); }
+
+/* ═══════════════════════════════════════════════
+   INSTAGRAM — Animated ring + charts
+   ═══════════════════════════════════════════════ */
+
+/* Ring fill animates from empty to target on mount */
+@keyframes ig-ring-draw {
+  from { stroke-dashoffset: 326.7; }
+}
+.ig-ring-fill-anim {
+  animation: ig-ring-draw 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+/* Line chart draw animation (polyline stroke trick) */
+@keyframes line-draw {
+  to { stroke-dashoffset: 0; }
+}
+.chart-line-anim {
+  stroke-dasharray: 9999;
+  stroke-dashoffset: 9999;
+  animation: line-draw 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.chart-dot-anim {
+  opacity: 0;
+  animation: fade-up 0.3s ease 1.8s forwards;
+}
+@keyframes area-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.chart-area-anim {
+  opacity: 0;
+  animation: area-fade 0.8s ease 1.2s forwards;
+}
+
+/* Growth chart container */
+.ig-growth-chart {
+  background: var(--s1);
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 0.5px var(--b1);
+  padding: 14px 0 0;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.ig-growth-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 14px 10px;
+}
+.ig-chart-title {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--hnd);
+  color: var(--ink3);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.ig-chart-delta {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--hnd);
+  color: var(--green);
+}
+
+/* Posts bar chart */
+.posts-chart-wrap {
+  background: var(--s1);
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 0.5px var(--b1);
+  padding: 14px 14px 10px;
+  margin-bottom: 20px;
+}
+.posts-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+.posts-bar-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 40px;
+}
+.posts-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  height: 100%;
+  justify-content: flex-end;
+}
+@keyframes bar-grow {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to   { transform: scaleY(1); transform-origin: bottom; }
+}
+.posts-bar {
+  width: 100%;
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+  animation: bar-grow 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.posts-bar-label {
+  font-size: 8px;
+  color: var(--ink4);
+  font-family: var(--hnd);
+  text-align: center;
+}
+.posts-week-labels {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.posts-week-label {
+  flex: 1;
+  font-size: 7px;
+  color: var(--ink4);
+  font-family: var(--hnd);
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Count-up number */
+@keyframes num-pop {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.count-up-anim {
+  animation: num-pop 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}

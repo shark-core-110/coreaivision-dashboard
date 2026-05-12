@@ -1,9 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-// SVG ring circumference for r=52: 2π×52 ≈ 326.7
+// ── SVG ring — circumference for r=52: 2π×52 ≈ 326.7
 const CIRC_IG = 326.7
+const FOLLOWERS = 18900
+const TARGET    = 50000
+const PCT       = Math.round((FOLLOWERS / TARGET) * 1000) / 10   // 37.8
+
+// ── Weekly growth data (last 8 weeks)
+const growthData = [
+  { week: 'Mar 17', count: 14200 },
+  { week: 'Mar 24', count: 14900 },
+  { week: 'Mar 31', count: 15600 },
+  { week: 'Apr 7',  count: 16300 },
+  { week: 'Apr 14', count: 16900 },
+  { week: 'Apr 21', count: 17500 },
+  { week: 'Apr 28', count: 18100 },
+  { week: 'May 5',  count: 18900 },
+]
+
+// ── Weekly post counts
+const postsData = [
+  { week: 'M 17', count: 2 },
+  { week: 'M 24', count: 1 },
+  { week: 'M 31', count: 3 },
+  { week: 'A 7',  count: 2 },
+  { week: 'A 14', count: 2 },
+  { week: 'A 21', count: 3 },
+  { week: 'A 28', count: 2 },
+  { week: 'M 5',  count: 2 },
+]
 
 const contentMix = [
   { dot: 'mix-dot-prog',   name: 'AI tutorials — TimKoda / Wavy Boy style', status: 'Building'    },
@@ -19,21 +46,165 @@ const criticalGaps = [
   { dot: 'bn-med',  text: 'Frequency needs to reach daily to hit 50K'  },
 ]
 
-const pct    = 37.8
-const offset = CIRC_IG - (pct / 100) * CIRC_IG
+// ── Count-up hook
+function useCountUp(target: number, duration = 1400, delay = 0) {
+  const [val, setVal] = useState(0)
+  useEffect(() => {
+    let startTime: number | null = null
+    let rafId: number
+    const animate = (ts: number) => {
+      if (!startTime) startTime = ts
+      const elapsed = ts - startTime - delay
+      if (elapsed < 0) { rafId = requestAnimationFrame(animate); return }
+      const progress = Math.min(elapsed / duration, 1)
+      const eased    = 1 - Math.pow(1 - progress, 3)
+      setVal(Math.floor(eased * target))
+      if (progress < 1) rafId = requestAnimationFrame(animate)
+      else setVal(target)
+    }
+    rafId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafId)
+  }, [target, duration, delay])
+  return val
+}
+
+function fmt(n: number) {
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K'
+  return String(n)
+}
+
+// ── Follower growth SVG line chart
+function GrowthChart() {
+  const W = 320, H = 72
+  const pad = { top: 8, right: 12, bottom: 18, left: 12 }
+  const cW  = W - pad.left - pad.right
+  const cH  = H - pad.top  - pad.bottom
+  const min = Math.min(...growthData.map(d => d.count))
+  const max = Math.max(...growthData.map(d => d.count))
+  const rng = max - min
+
+  const cx = (i: number) => pad.left + (i / (growthData.length - 1)) * cW
+  const cy = (v: number) => pad.top + (1 - (v - min) / rng) * cH
+
+  const pts  = growthData.map((d, i) => `${cx(i)},${cy(d.count)}`).join(' ')
+  const last = growthData[growthData.length - 1]
+  const prev = growthData[0]
+  const gain = last.count - prev.count
+
+  const areaPath = [
+    `M ${cx(0)},${cy(growthData[0].count)}`,
+    ...growthData.slice(1).map((d, i) => `L ${cx(i + 1)},${cy(d.count)}`),
+    `L ${cx(growthData.length - 1)},${H - pad.bottom}`,
+    `L ${cx(0)},${H - pad.bottom}`,
+    'Z',
+  ].join(' ')
+
+  return (
+    <div className="ig-growth-chart">
+      <div className="ig-growth-chart-header">
+        <span className="ig-chart-title">Follower Growth — 8 Weeks</span>
+        <span className="ig-chart-delta">+{fmt(gain)} since Mar 17</span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block' }}>
+        {/* Subtle grid lines */}
+        {[0.25, 0.5, 0.75].map(t => (
+          <line
+            key={t}
+            x1={pad.left} y1={pad.top + t * cH}
+            x2={W - pad.right} y2={pad.top + t * cH}
+            stroke="var(--b1)" strokeWidth="0.5"
+          />
+        ))}
+        {/* Area */}
+        <path d={areaPath} fill="rgba(255,255,255,0.04)" className="chart-area-anim" />
+        {/* Line */}
+        <polyline
+          points={pts}
+          fill="none"
+          stroke="rgba(255,255,255,0.55)"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="chart-line-anim"
+        />
+        {/* End dot */}
+        <circle
+          cx={cx(growthData.length - 1)}
+          cy={cy(last.count)}
+          r="3"
+          fill="rgba(255,255,255,0.85)"
+          className="chart-dot-anim"
+        />
+        {/* Week labels every 2nd */}
+        {growthData.filter((_, i) => i % 2 === 0).map((d, i) => (
+          <text
+            key={d.week}
+            x={cx(i * 2)}
+            y={H - 3}
+            fontSize="7"
+            fill="rgba(255,255,255,0.25)"
+            fontFamily="-apple-system,sans-serif"
+            textAnchor="middle"
+          >
+            {d.week}
+          </text>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+// ── Weekly posts bar chart
+function PostsChart() {
+  const maxPosts = Math.max(...postsData.map(d => d.count))
+
+  return (
+    <div className="posts-chart-wrap">
+      <div className="posts-chart-header">
+        <span className="ig-chart-title">Posts Per Week</span>
+        <span style={{ fontSize: 11, fontFamily: 'var(--hnd)', color: 'var(--ink4)' }}>
+          avg {(postsData.reduce((s, d) => s + d.count, 0) / postsData.length).toFixed(1)}/week
+        </span>
+      </div>
+      <div className="posts-bar-row">
+        {postsData.map((d, i) => (
+          <div key={i} className="posts-bar-col">
+            <div
+              className="posts-bar"
+              style={{
+                height: `${(d.count / maxPosts) * 100}%`,
+                animationDelay: `${0.05 * i + 0.3}s`,
+                background: d.count === maxPosts
+                  ? 'rgba(255,255,255,0.4)'
+                  : 'rgba(255,255,255,0.15)',
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="posts-week-labels">
+        {postsData.map((d, i) => (
+          <div key={i} className="posts-week-label">{d.week}</div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function Instagram() {
   const [gapsOpen, setGapsOpen] = useState(false)
+  const animFollowers = useCountUp(FOLLOWERS, 1400, 100)
   const critCount = criticalGaps.filter(g => g.dot === 'bn-crit').length
+  const offset = CIRC_IG - (PCT / 100) * CIRC_IG
 
   return (
     <>
-      {/* ── Hero: big follower count + progress ring ── */}
+      {/* ── Hero: animated follower count + animated ring ── */}
       <div className="ig-hero-layout">
         <div>
-          <div className="ig-big-num">18.9K</div>
+          <div className="ig-big-num count-up-anim">{fmt(animFollowers)}</div>
           <div className="ig-big-label">Followers</div>
-          <div className="ig-big-sub">@core.aivision · 50K goal</div>
+          <div className="ig-big-sub">@core.aivision · {TARGET / 1000}K goal</div>
           <div style={{ marginTop: 14, fontSize: 12, color: 'var(--ink3)', fontFamily: 'var(--hnd)' }}>
             Need <strong style={{ color: 'var(--ink2)' }}>+1,033/week</strong> to hit 50K in 12 weeks
           </div>
@@ -43,23 +214,29 @@ export default function Instagram() {
         </div>
         <div className="ig-ring-block">
           <svg className="ig-ring-svg" viewBox="0 0 120 120">
-            <circle className="ig-ring-bg"   cx="60" cy="60" r="52" />
+            <circle className="ig-ring-bg" cx="60" cy="60" r="52" />
             <circle
-              className="ig-ring-fill"
+              className="ig-ring-fill ig-ring-fill-anim"
               cx="60" cy="60" r="52"
               strokeDasharray={`${CIRC_IG} ${CIRC_IG}`}
               strokeDashoffset={offset}
             />
           </svg>
           <div className="ig-ring-center">
-            <div className="ig-ring-pct">{pct}%</div>
+            <div className="ig-ring-pct">{PCT}%</div>
             <div className="ig-ring-sub">to 50K</div>
           </div>
         </div>
       </div>
 
+      {/* ── Follower growth line chart ── */}
+      <GrowthChart />
+
+      {/* ── Posts per week bar chart ── */}
+      <PostsChart />
+
       {/* ── Content mix pills ── */}
-      <div className="sec" style={{ marginTop: 0, marginBottom: 8 }}>Content Mix</div>
+      <div className="sec" style={{ marginTop: 4, marginBottom: 8 }}>Content Mix</div>
       <div className="mix-pills-row">
         {contentMix.map((item) => (
           <div key={item.name} className="mix-pill">
