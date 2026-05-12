@@ -56,11 +56,11 @@ export default function Topbar({ pageTitle }: { pageTitle: string }) {
         {!onMyDashboard && (
           <Link
             href="/dashboard/my"
-            className="top-btn"
+            className="top-btn top-btn-nav"
             style={{
-              background: 'rgba(191,139,46,0.12)',
-              border: '0.5px solid rgba(191,139,46,0.3)',
-              color: '#BF8B2E',
+              background: 'rgba(255,255,255,0.08)',
+              border: '0.5px solid rgba(255,255,255,0.14)',
+              color: 'rgba(255,255,255,0.8)',
               fontWeight: 600,
             }}
           >
@@ -72,14 +72,14 @@ export default function Topbar({ pageTitle }: { pageTitle: string }) {
         {onMyDashboard && (
           <Link
             href="/dashboard"
-            className="top-btn"
+            className="top-btn top-btn-nav"
             style={{
-              background: 'rgba(191,139,46,0.08)',
-              border: '0.5px solid rgba(191,139,46,0.2)',
-              color: '#BF8B2E',
+              background: 'rgba(255,255,255,0.06)',
+              border: '0.5px solid rgba(255,255,255,0.1)',
+              color: 'rgba(255,255,255,0.7)',
             }}
           >
-            ← Main Dashboard
+            ← Main
           </Link>
         )}
 

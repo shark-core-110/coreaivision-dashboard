@@ -830,6 +830,7 @@ button { cursor: pointer; font-family: var(--mono); }
   .topbar { padding: 0 12px 0 8px; gap: 0; }
   .topbar-center { display: none; }
   .top-btn { display: none; }
+  .top-btn-nav { display: flex !important; padding: 8px 12px !important; font-size: 11px !important; }
   .hamburger-btn { display: flex; }
   .brand-name { font-size: 9px; letter-spacing: .15em; }
   .live-time { font-size: 11px; }
