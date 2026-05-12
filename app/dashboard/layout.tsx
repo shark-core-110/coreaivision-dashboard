@@ -6,6 +6,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import StatusBar from '@/components/layout/StatusBar'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import SoundManager from '@/components/SoundManager'
+import CommandPalette from '@/components/CommandPalette'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':              'Overview',
@@ -25,9 +26,14 @@ const pageTitles: Record<string, string> = {
   '/dashboard/calendar':     'Content Calendar',
   '/dashboard/marketing':     'Marketing',
   '/dashboard/goals':        'Goals',
-  '/dashboard/assign-tasks': 'Assign Tasks',
-  '/dashboard/my':           'My Dashboard',
-  '/dashboard/onboarding':   'Welcome',
+  '/dashboard/assign-tasks':         'Assign Tasks',
+  '/dashboard/my':                   'My Dashboard',
+  '/dashboard/onboarding':           'Welcome',
+  '/dashboard/activity':             'Activity',
+  '/dashboard/admin/bottlenecks':    'Edit Bottlenecks',
+  '/dashboard/admin/workstreams':    'Edit Workstreams',
+  '/dashboard/admin/goals':          'Edit Goals',
+  '/dashboard/admin/team':           'Edit Team',
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -41,6 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <StatusBar />
       <Sidebar />
       <main className="main">{children}</main>
+      <CommandPalette />
     </NotificationProvider>
   )
 }

@@ -83,6 +83,26 @@ export default function Topbar({ pageTitle }: { pageTitle: string }) {
           </Link>
         )}
 
+        <button
+          onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
+          aria-label="Search (⌘K)"
+          title="Search ⌘K"
+          style={{
+            background: 'rgba(255,255,255,.06)',
+            border: '0.5px solid rgba(255,255,255,.12)',
+            borderRadius: 7,
+            padding: '5px 10px',
+            cursor: 'pointer',
+            fontSize: 13,
+            color: 'var(--ink3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+          }}
+        >
+          <span>⌕</span>
+          <span style={{ fontSize: 11, opacity: 0.6 }}>⌘K</span>
+        </button>
         <SoundToggle />
         <NotificationBell />
         <div>

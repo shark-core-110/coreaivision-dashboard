@@ -59,14 +59,18 @@ const quickLinks = [
 ]
 
 export default function Overview() {
-  const [critOpen,    setCritOpen]    = useState(false)
-  const [wsOpen,      setWsOpen]      = useState(false)
-  const [workstreams, setWorkstreams] = useState<Workstream[]>([])
-  const [bottlenecks, setBottlenecks] = useState<Bottleneck[]>([])
+  const [critOpen,      setCritOpen]      = useState(false)
+  const [wsOpen,        setWsOpen]        = useState(false)
+  const [workstreams,   setWorkstreams]   = useState<Workstream[]>([])
+  const [bottlenecks,   setBottlenecks]   = useState<Bottleneck[]>([])
+  const [tasksDueToday, setTasksDueToday] = useState<{ id: string; title: string; assigned_to: string | null }[]>([])
+  const [calToday,      setCalToday]      = useState<{ id: string; title: string; prod_status: string }[]>([])
 
   useEffect(() => {
     const supabase = createClient()
     let cancelled = false
+
+    const today = new Date().toISOString().slice(0, 10)
 
     Promise.all([
       supabase
@@ -79,10 +83,23 @@ export default function Overview() {
         .eq('scope', 'overview')
         .eq('resolved', false)
         .order('created_at', { ascending: true }),
-    ]).then(([wsRes, bnRes]) => {
+      supabase
+        .from('tasks')
+        .select('id, title, assigned_to')
+        .eq('due_date', today)
+        .neq('status', 'done')
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('content_calendar')
+        .select('id, title, prod_status')
+        .eq('date', today)
+        .order('created_at', { ascending: true }),
+    ]).then(([wsRes, bnRes, tasksRes, calRes]) => {
       if (cancelled) return
-      if (wsRes.data) setWorkstreams(wsRes.data as Workstream[])
-      if (bnRes.data) setBottlenecks(bnRes.data as Bottleneck[])
+      if (wsRes.data)    setWorkstreams(wsRes.data as Workstream[])
+      if (bnRes.data)    setBottlenecks(bnRes.data as Bottleneck[])
+      if (tasksRes.data) setTasksDueToday(tasksRes.data as { id: string; title: string; assigned_to: string | null }[])
+      if (calRes.data)   setCalToday(calRes.data as { id: string; title: string; prod_status: string }[])
     })
 
     return () => { cancelled = true }
@@ -91,8 +108,43 @@ export default function Overview() {
   const critCount   = bottlenecks.filter(b => b.severity === 'crit').length
   const onlineCount = teamNow.filter(m => m.online).length
 
+  const hasDigest = critCount > 0 || tasksDueToday.length > 0 || calToday.length > 0
+
   return (
     <>
+      {/* ── Daily Digest Banner ── */}
+      {hasDigest && (
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16,
+          padding: '10px 14px',
+          background: 'rgba(255,255,255,.03)',
+          border: '0.5px solid rgba(255,255,255,.08)',
+          borderRadius: 9,
+        }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink4)', textTransform: 'uppercase', letterSpacing: '.06em', alignSelf: 'center', marginRight: 4 }}>Today</span>
+
+          {critCount > 0 && (
+            <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, background: 'rgba(239,68,68,.1)', border: '0.5px solid rgba(239,68,68,.25)', color: '#ef4444' }}>
+              {critCount} critical block{critCount > 1 ? 's' : ''}
+            </span>
+          )}
+
+          {tasksDueToday.length > 0 && (
+            <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, background: 'rgba(26,112,173,.1)', border: '0.5px solid rgba(26,112,173,.25)', color: 'var(--blue)' }}>
+              {tasksDueToday.length} task{tasksDueToday.length > 1 ? 's' : ''} due
+              {tasksDueToday.length <= 2 && ': ' + tasksDueToday.map(t => t.title).join(', ')}
+            </span>
+          )}
+
+          {calToday.length > 0 && (
+            <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 6, background: 'rgba(191,90,242,.08)', border: '0.5px solid rgba(191,90,242,.25)', color: '#BF5AF2' }}>
+              {calToday.length} on calendar
+              {calToday.length <= 2 && ': ' + calToday.map(c => c.title).join(', ')}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* ── Hero Stats ── */}
       <div className="hero-stat-row">
         <div className="hero-stat-block">
